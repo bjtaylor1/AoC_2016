@@ -13,6 +13,17 @@ namespace Day8
     public class Day8
     {
         [TestMethod]
+        public void DoInput()
+        {
+            var disp = new Display(50, 6);
+            foreach (var line in File.ReadAllLines("input.txt"))
+            {
+                disp.ApplyInstruction(line);
+            }
+            Console.Out.WriteLine(disp.GetNumberLit());
+        }
+
+        [TestMethod]
         public void Example1()
         {
             var disp = new Display(7, 3);
@@ -21,6 +32,7 @@ namespace Day8
                 "###....\n" + 
                 "###....\n" + 
                 ".......\n", disp.Render());
+            Assert.AreEqual(6, disp.GetNumberLit());
         }
 
         [TestMethod]
@@ -146,6 +158,11 @@ namespace Day8
                 s.Append(string.Join("", Pixels.Select(col => renderings[col[row]]).ToArray()) + "\n");
             }
             return s.ToString();
+        }
+
+        public int GetNumberLit()
+        {
+            return Pixels.Sum(c => c.Sum());
         }
     }
 }

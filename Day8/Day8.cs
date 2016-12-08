@@ -13,14 +13,53 @@ namespace Day8
     public class Day8
     {
         [TestMethod]
-        public void Examples()
+        public void Example1()
         {
             var disp = new Display(7, 3);
-            disp.TurnOn(3, 2);
+            disp.ApplyInstruction("rect 3x2");
             Assert.AreEqual("\n" + 
                 "###....\n" + 
                 "###....\n" + 
                 ".......\n", disp.Render());
+        }
+
+        [TestMethod]
+        public void Example2()
+        {
+            var disp = new Display(7, 3);
+            disp.ApplyInstruction("rect 3x2");
+            disp.ApplyInstruction("rotate column x=1 by 1");
+            Assert.AreEqual("\n" +
+                "#.#....\n" +
+                "###....\n" + 
+                ".#.....\n", disp.Render());
+        }
+
+        [TestMethod]
+        public void Example3()
+        {
+            var disp = new Display(7, 3);
+            disp.ApplyInstruction("rect 3x2");
+            disp.ApplyInstruction("rotate column x=1 by 1");
+            disp.ApplyInstruction("rotate row y=0 by 4");
+            Assert.AreEqual("\n" +
+                "....#.#\n" + 
+                "###....\n" + 
+                ".#.....\n", disp.Render());
+        }
+
+        [TestMethod]
+        public void Example4()
+        {
+            var disp = new Display(7, 3);
+            disp.ApplyInstruction("rect 3x2");
+            disp.ApplyInstruction("rotate column x=1 by 1");
+            disp.ApplyInstruction("rotate row y=0 by 4");
+            disp.ApplyInstruction("rotate column x=1 by 1");
+            Assert.AreEqual("\n" +
+                ".#..#.#\n" + 
+                "#.#....\n" + 
+                ".#.....\n", disp.Render());
         }
     }
 
@@ -81,7 +120,7 @@ namespace Day8
         {
             var newPixels = input.Select((i, index) =>
             {
-                var newIndex = (input.Length + i - amount)%input.Length;
+                var newIndex = (input.Length + index - amount)%input.Length;
                 return input[newIndex];
             }).ToArray();
             return newPixels;

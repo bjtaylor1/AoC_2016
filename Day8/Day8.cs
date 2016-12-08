@@ -21,6 +21,7 @@ namespace Day8
                 disp.ApplyInstruction(line);
             }
             Console.Out.WriteLine(disp.GetNumberLit());
+            Console.Out.WriteLine(disp.Render());
         }
 
         [TestMethod]

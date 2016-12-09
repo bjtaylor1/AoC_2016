@@ -28,6 +28,7 @@ namespace Day9
         public void ExamplesV2(string input, string result)
         {
             Assert.AreEqual(result, Processor.ProcessAndReturnString(input, true));
+            Assert.AreEqual(result.Length, Processor.ProcessAndReturnLength(input));
         }
 
         [Test]
@@ -40,8 +41,8 @@ namespace Day9
         [Test]
         public void ExampleV2_2()
         {
-            var result = Processor.ProcessAndReturnString("(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN", true);
-            Assert.AreEqual(445, result.Length);
+            var result = Processor.ProcessAndReturnLength("(25x3)(3x3)ABC(2x3)XY(5x2)PQRSTX(18x9)(3x2)TWO(5x7)SEVEN");
+            Assert.AreEqual(445, result);
         }
 
 
@@ -49,8 +50,8 @@ namespace Day9
         public void DoInput()
         {
             var input = File.ReadAllText($"{TestContext.CurrentContext.TestDirectory}\\input.txt").Trim();
-            var result = Processor.ProcessAndReturnString(input, true);
-            Console.Out.WriteLine(result.Length);
+            var result = Processor.ProcessAndReturnLength(input);
+            Console.Out.WriteLine(result);
         }
     }
 
@@ -66,11 +67,39 @@ namespace Day9
             return result;
         }
 
-        public static long ProcessAndReturnLength(string input, bool v2 = false)
+        public static long ProcessAndReturnLength(string input)
         {
-            var outputFile = Process(input, v2);
-            var result = new FileInfo(outputFile).Length;
-            return result;
+            int index = 0;
+            return ProcessAndReturnLength(input, ref index);
+        }
+
+        private static readonly Regex regex = new Regex(@"(?:[A-Z]+)|\((\d+)x(\d+)\)", RegexOptions.Compiled);
+        private static long ProcessAndReturnLength(string input, ref int index)
+        {
+            long length = 0;
+            Match match;
+            
+            while((match = regex.Match(input, index)).Success)
+            {
+                int numCharsToRepeat, numTimesToRepeat;
+                index = match.Index + match.Length;
+                if (int.TryParse(match.Groups[1].Value, out numCharsToRepeat) && int.TryParse(match.Groups[2].Value, out numTimesToRepeat))
+                {
+                    var stringToRepeat = input.Substring(index, numCharsToRepeat);
+                    index += stringToRepeat.Length;
+                    var repeatedString = string.Join("", Enumerable.Repeat(stringToRepeat, numTimesToRepeat));
+                    int subIndex = 0;
+                    var lengthOfRepeatedStringDecompressed = ProcessAndReturnLength(repeatedString, ref subIndex);
+                    length += lengthOfRepeatedStringDecompressed;
+                    
+                }
+                else
+                {
+                    length += match.Length;
+                }
+                
+            }
+            return length;
         }
 
         private static string Process(string input, bool v2)

@@ -38,6 +38,11 @@ namespace Day10
 
             var bot = Processor.Bots.Single(b => b.Value.High == 61 && b.Value.Low == 17);
             Console.Out.WriteLine(bot.Key);
+
+            foreach (var outputBin in Processor.OutputBins)
+            {
+                Console.Out.WriteLine($"Output bin {outputBin.Key} has {outputBin.Value.Count} = {string.Join(", ", outputBin.Value.Select(i => i.ToString()))}");
+            }
         }
     }
 

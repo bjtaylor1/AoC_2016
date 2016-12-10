@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Day10
@@ -11,25 +13,48 @@ namespace Day10
     public class UnitTest1
     {
         [TestMethod]
-        public void TestMethod1()
+        public void Example()
         {
+            var exampleLines = File.ReadAllLines("ExampleInput.txt");
+            foreach (var exampleLine in exampleLines)
+            {
+                Processor.ProcessLine(exampleLine);
+            }
+            Processor.OutputBins[0].Should().Contain(5);
+            Processor.OutputBins[1].Should().Contain(2);
+            Processor.OutputBins[2].Should().Contain(3);
+
+            Processor.Bots.Single(b => b.Value.High == 5 && b.Value.Low == 2).Key.Should().Be(2);
+        }
+
+        [TestMethod]
+        public void ProcessInput()
+        {
+            var lines = File.ReadAllLines("input.txt");
+            foreach (var line in lines)
+            {
+                Processor.ProcessLine(line);
+            }
+
+            var bot = Processor.Bots.Single(b => b.Value.High == 61 && b.Value.Low == 17);
+            Console.Out.WriteLine(bot.Key);
         }
     }
 
     public class Processor
     {
-        private static readonly ConcurrentDictionary<int, Bot> bots = new ConcurrentDictionary<int, Bot>();
-        private static readonly ConcurrentDictionary<int, List<int>> outputBins = new ConcurrentDictionary<int, List<int>>();
+        public static readonly ConcurrentDictionary<int, Bot> Bots = new ConcurrentDictionary<int, Bot>();
+        public static readonly ConcurrentDictionary<int, List<int>> OutputBins = new ConcurrentDictionary<int, List<int>>();
 
         public static Bot GetBot(int index)
         {
-            var bot = bots.GetOrAdd(index, i => new Bot(i));
+            var bot = Bots.GetOrAdd(index, i => new Bot(i));
             return bot;
         }
 
         public static void AddToOutputBin(int index, int chip)
         {
-            outputBins.GetOrAdd(index, i => new List<int>()).Add(chip);
+            OutputBins.GetOrAdd(index, i => new List<int>()).Add(chip);
         }
 
         private static readonly Regex valueGoesTo = new Regex(@"^value (\d+) goes to bot (\d+)$");
@@ -71,23 +96,27 @@ namespace Day10
         {
             if(chips.Count >= 2) throw new InvalidOperationException($"Bot {index} has already got two chips!");
             chips.Add(val);
-            if (chips.Count == 2) ProcessInstruction();
+            if (chips.Count == 2 && instruction != null) ProcessInstruction();
         }
 
         private void ProcessInstruction()
         {
-            if(instruction == null) throw new InvalidOperationException($"Bot {index} has got two chips but no instruction yet!");
-            var high = chips.Max();
-            var low = chips.Min();
+            High = chips.Max();
+            Low = chips.Min();
             chips.Clear();
-            instruction.GiveHighTo.Apply(high);
-            instruction.GiveLowTo.Apply(low);
+            instruction.GiveHighTo.Apply(High);
+            instruction.GiveLowTo.Apply(Low);
         }
+
+        public int Low { get; set; }
+
+        public int High { get; set; }
 
         public void SetInstruction(Instruction newInstruction)
         {
             if(instruction != null) throw new InvalidOperationException($"Bot {index} has already got an instruction!");
             instruction = newInstruction;
+            if(chips.Count == 2 && instruction != null) ProcessInstruction();
         }
     }
 
@@ -112,7 +141,7 @@ namespace Day10
             var match = Regex.Match(s, @"(bot|output) (\d+)");
             if(!match.Success) throw new ArgumentException($"Invalid target {s}");
             TargetType = (TargetType) Enum.Parse(typeof(TargetType), match.Groups[1].Value);
-            Index = int.Parse(match.Groups[1].Value);
+            Index = int.Parse(match.Groups[2].Value);
         }
         public int Index { get; }
         public TargetType TargetType { get; }
@@ -125,6 +154,7 @@ namespace Day10
                     Processor.GetBot(Index).GiveChip(chip);
                     break;
                 case TargetType.output:
+                    Processor.AddToOutputBin(Index, chip);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

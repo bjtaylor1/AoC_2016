@@ -17,7 +17,7 @@ namespace Day5
 
         static string GetPassword2(string prefix)
         {
-            var passwordChars = new char?[8];~
+            var passwordChars = new char?[8];
             int i = 0;
             while (passwordChars.Any(c => c == null))
             {

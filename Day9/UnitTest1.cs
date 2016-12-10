@@ -17,10 +17,11 @@ namespace Day9
         [TestCase("(3x3)XYZ", "XYZXYZXYZ")]
         [TestCase("A(2x2)BCD(2x2)EFG", "ABCBCDEFEFG")]
         [TestCase("(6x1)(1x3)A", "(1x3)A")]
+        [TestCase("(5x2)(5x2)ADVENT", "(1x3)A")]
         [TestCase("X(8x2)(3x3)ABCY", "X(3x3)ABC(3x3)ABCY")]
         public void Examples(string input, string result)
         {
-            Assert.AreEqual(result, Processor.ProcessAndReturnString(input));
+            Assert.AreEqual(result, Processor.ProcessAndReturnString(input, true));
         }
 
         [TestCase("(3x3)XYZ", "XYZXYZXYZ")]
@@ -36,6 +37,8 @@ namespace Day9
         {
             Assert.AreEqual(string.Join("", Enumerable.Repeat("A", 241920)), 
                 Processor.ProcessAndReturnString("(27x12)(20x12)(13x14)(7x10)(1x12)A", true));
+            Assert.AreEqual(241920, 
+                Processor.ProcessAndReturnLength("(27x12)(20x12)(13x14)(7x10)(1x12)A"));
         }
 
         [Test]
@@ -130,7 +133,6 @@ namespace Day9
             using (var output = new StreamWriter(outputFile))
             {
                 using (var inputStream = File.OpenRead(inputFile))
-                using(var inputStreamReader = new StreamReader(inputStream))
                 {
                     Marker m;
                     found = false;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -125,39 +126,6 @@ namespace Day11
             states.First().Should().Be(goodState);
         }
 
-
-        [Test]
-        public void Example()
-        {
-            var initialState = new State
-            {
-                Floors = new []
-                {
-                    new List<string> {"HyM", "LiM"}, 
-                    new List<string> {"HyG"}, 
-                    new List<string> {"LiG"},
-                    new List<string>(), 
-                }
-            };
-
-            var allStates = new List<State> {initialState};
-            State completeState = null;
-            while (completeState == null)
-            {
-                var allNextStates = new List<State>();
-                foreach (var state in allStates)
-                {
-                    var nextStates = state.GetTransitions().Where(s => s.IsValid() && !allStates.Contains(s)).ToArray();
-                    completeState = nextStates.FirstOrDefault(s => s.IsComplete());
-                    if (completeState != null) break;
-                    allNextStates.AddRange(nextStates);
-                }
-                allStates.AddRange(allNextStates);
-                allStates.Sort();
-                allStates = allStates.Take((int) 1e6).ToList();
-            }
-            Console.Out.WriteLine(completeState.Depth);
-        }
 
         [TestCase(false, "THG", "LIM")]
         [TestCase(false, "THG", "LIM", "PRG", "PRM")]
@@ -310,6 +278,70 @@ namespace Day11
             state.Depth.Should().Be(11);
         }
 
+
+        [Test]
+        public void Example()
+        {
+            var initialState = new State
+            {
+                Floors = new[]
+                {
+                    new List<string> {"HyM", "LiM"},
+                    new List<string> {"HyG"},
+                    new List<string> {"LiG"},
+                    new List<string>(),
+                }
+            };
+            Solve(initialState);
+        }
+
+        [Test]
+        public void DoPuzzle()
+        {
+            var initialState = new State
+            {
+                Floors = new[]
+                {
+                    new List<string> {"ThG", "ThM", "PlG", "StG"},
+                    new List<string> {"PlM", "StM"},
+                    new List<string> {"PrG", "PrM", "RuG", "RuM"},
+                    new List<string> {}
+                }
+            };
+            Solve(initialState);
+        }
+
+        private static void Solve(State initialState)
+        {
+            foreach (var floor in initialState.Floors)
+            {
+                floor.Sort();
+            }
+
+            var allStates = new List<State> {initialState};
+            State completeState = null;
+            while (completeState == null)
+            {
+                var allNextStates = new List<State>();
+                foreach (var state in allStates)
+                {
+                    var nextStates = state.GetTransitions().Where(s => s.IsValid() && !allStates.Contains(s)).ToArray();
+                    completeState = nextStates.FirstOrDefault(s => s.IsComplete());
+                    if (completeState != null) break;
+                    allNextStates.AddRange(nextStates);
+                }
+                allStates.AddRange(allNextStates);
+                allStates.Sort();
+                allStates = allStates.Take((int) 1e6).ToList();
+            }
+            for (int index = completeState.Path.Count - 1; index >= 0; index--)
+            {
+                var state = completeState.Path[index];
+                Console.Out.WriteLine(state.Render() + "\n");
+            }
+            Console.Out.WriteLine(completeState.Depth);
+        }
+
         private static State CheckAndAdvance(State s, State newState)
         {
             var transitions = s.GetTransitions();
@@ -334,6 +366,17 @@ namespace Day11
                 && Floors[2].SequenceEqual(other.Floors[2])
                 && Floors[3].SequenceEqual(other.Floors[3]);
             return floorsEqual;
+        }
+
+        public string Render()
+        {
+            var render = string.Join("\n", Floors.Select((f, i) => new {f,i}).OrderByDescending(a => a.i).Select(a => 
+            {
+                var abbreviatedItems = a.f.Select(s => new string(new[] { s[0], s[2]}));
+                var code = $"F{a.i + 1} " + (Pos == a.i ? "E " : "  ") + string.Join(" ", abbreviatedItems);
+                return code;
+            }));
+            return render;
         }
 
         public int CompareTo(State other)
@@ -363,7 +406,7 @@ namespace Day11
         {
             unchecked
             {
-                return ((Floors != null ? Floors.GetHashCode() : 0)*397) ^ Pos;
+                return ((Floors != null ? Floors.Aggregate(19, (i,f) => i * f.Aggregate(199, (j,s) => j * s.GetHashCode())) : 0)*397) ^ Pos;
             }
         }
 
@@ -383,13 +426,16 @@ namespace Day11
 
         public State()
         {
+            Path = new List<State> {this};
         }
 
-        public State(State state, int movement, int depth)
+        public List<State> Path;
+        public State(State state, int movement, int depth) : this()
         {
             Floors = state.Floors.Select(s => new List<string>(s)).ToArray();
             Pos = state.Pos + movement;
             Depth = depth;
+            Path.AddRange(state.Path);
         }
 
         public bool IsValid()
@@ -403,7 +449,7 @@ namespace Day11
             return Floors[0].Count + Floors[1].Count + Floors[2].Count == 0;
         }
 
-        private static bool ContentsCompatible(List<string> items)
+        public static bool ContentsCompatible(ICollection<string> items)
         {
             //remove pairs
             var microchips = items.Where(s => s.EndsWith("M")).ToList();
@@ -433,7 +479,8 @@ namespace Day11
                     movableCombinations.Add(new [] {Floors[Pos][i], Floors[Pos][j]});
                 }
             }
-            return movableCombinations.ToArray();
+
+            return movableCombinations.Where(ContentsCompatible).ToArray();
         }
 
         public State ApplyMove(string[] items, int floorChange)

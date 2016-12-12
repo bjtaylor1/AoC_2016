@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NLog;
 
 namespace Day12
 {
@@ -15,6 +17,23 @@ namespace Day12
             state.ApplyAll(File.ReadAllLines("testinput.txt"));
             Assert.AreEqual(42, state.Registers["a"]);
         }
+
+        [TestMethod]
+        public void Part1()
+        {
+            var state = new State();
+            state.ApplyAll(File.ReadAllLines("input.txt"));
+            Console.Out.WriteLine(state.Registers["a"]);
+        }
+
+        [TestMethod]
+        public void Part2()
+        {
+            var state = new State();
+            state.Registers["c"] = 1;
+            state.ApplyAll(File.ReadAllLines("input.txt"));
+            Console.Out.WriteLine(state.Registers["a"]);
+        }
     }
 
     public class State
@@ -23,7 +42,6 @@ namespace Day12
         {
             {"a", 0},
             {"b", 0},
-            {"c", 0},
             {"d", 0}
         };
 
@@ -32,8 +50,10 @@ namespace Day12
         {
             for (int i = 0; i < instructions.Length; i++)
             {
+                
                 var j = ApplyInstruction(instructions[i]);
-                i += j;
+                //LogManager.GetCurrentClassLogger().Info($"{i:00}:   {string.Join(" ", Registers.Values.Select(r => r.ToString("00")))}:   {instructions[i].PadRight(8)}");
+                if (j != 0) i += j - 1;
             }
         }
         public int ApplyInstruction(string instruction)
@@ -64,6 +84,7 @@ namespace Day12
                     toSkip = GetValue(parts[2]);
                 }
             }
+            else throw new ArgumentException($"Unrecognized instruction {instruction}");
             return toSkip;
         }
 

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NLog;
 using NUnit.Framework;
 
 namespace Day11
@@ -328,11 +329,14 @@ namespace Day11
                     var nextStates = state.GetTransitions().Where(s => s.IsValid() && !allStates.Contains(s)).ToArray();
                     completeState = nextStates.FirstOrDefault(s => s.IsComplete());
                     if (completeState != null) break;
+                    //LogManager.GetCurrentClassLogger().Debug($"{nextStates.Length}");
                     allNextStates.AddRange(nextStates);
                 }
+                var prevCount = allStates.Count;
                 allStates.AddRange(allNextStates);
                 allStates.Sort();
-                allStates = allStates.Take((int) 1e6).ToList();
+                LogManager.GetCurrentClassLogger().Info($"States: {prevCount} + {allNextStates.Count} = {allStates.Count}");
+                //allStates = allStates.Take((int) 1e5).ToList();
             }
             for (int index = completeState.Path.Count - 1; index >= 0; index--)
             {
@@ -366,6 +370,17 @@ namespace Day11
                 && Floors[2].SequenceEqual(other.Floors[2])
                 && Floors[3].SequenceEqual(other.Floors[3]);
             return floorsEqual;
+        }
+
+        public bool Degenerate()
+        {
+            var degenerate = 
+                Floors[0].Any() && 
+                !Floors[1].Any() && 
+                !Floors[2].Any() && 
+                Floors[3].Any();
+            if(degenerate) LogManager.GetLogger("Degenerate").Info("Degenerate!");
+            return degenerate;
         }
 
         public string Render()
@@ -504,7 +519,8 @@ namespace Day11
             {
                 states.AddRange(movableCombinations.Select(s => ApplyMove(s, 1)));
             }
-            return states.ToArray();
+            var transitions = states.Where(s => !Path.Contains(s) && !s.Degenerate()).ToArray();
+            return transitions;
         }
     }
 }

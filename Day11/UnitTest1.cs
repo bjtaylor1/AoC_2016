@@ -307,7 +307,7 @@ namespace Day11
             {
                 Floors = new[]
                 {
-                    new List<string> {"ThG", "ThM", "PlG", "StG"},
+                    new List<string> {"ThG", "ThM", "PlG", "StG", /*"ElG", "ElM", "DiG", "DiM"*/},
                     new List<string> {"PlM", "StM"},
                     new List<string> {"PrG", "PrM", "RuG", "RuM"},
                     new List<string> {}
@@ -330,15 +330,11 @@ namespace Day11
                 var bestState = sortedStates.OrderBy(s => s.GetScore()).First(s => !s.Visited);
                 bestState.Visited = true;
                 var nextStates = bestState.GetTransitions().Where(s => s.IsValid() && !sortedStates.Contains(s)).ToArray();
-                //if(nextStates.Any()) sortedStates.RemoveAt(0);
                 sortedStates.AddRange(nextStates);
 
                 completeState = nextStates.FirstOrDefault(s => s.IsComplete());
                 if (completeState != null) break;
-                //LogManager.GetCurrentClassLogger().Debug($"{nextStates.Length}");
-                
-                LogManager.GetCurrentClassLogger().Info($"States: {sortedStates.Count}");
-                //allStates = allStates.Take((int) 1e5).ToList();
+                LogManager.GetCurrentClassLogger().Info($"{nextStates.Length}");
             }
             for (int index = completeState.Path.Count - 1; index >= 0; index--)
             {
@@ -375,13 +371,14 @@ namespace Day11
 
         private string FloorHashes()
         {
-//            var floorHashes = string.Join(", ", Floors.Select(f => f.OrderBy(s => s)));
-            var floorHashes = string.Join(", ", Floors.Select(f => new string(f.Select(i => i.Last()).OrderBy(c => c).ToArray())));
+            var floorHashes = string.Join(", ", Floors.Select(f => string.Join(" ", f.OrderBy(s => s).ToArray())));
+//            var floorHashes = string.Join(", ", Floors.Select(f => new string(f.Select(i => i.Last()).OrderBy(c => c).ToArray()))); //Jo's optimization!
             return floorHashes;
         }
 
         public bool Degenerate()
         {
+            return false;
             var degenerate =
                 Floors[0].Any() &&
                 !Floors[1].Any() &&
@@ -463,7 +460,7 @@ namespace Day11
 
         public bool IsValid()
         {
-            var isValid = Floors.All(ContentsCompatible) && Depth < 100;
+            var isValid = Floors.All(ContentsCompatible)/* && Depth < 100*/;
             return isValid;
         }
 

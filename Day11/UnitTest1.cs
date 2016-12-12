@@ -6,6 +6,7 @@ using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NLog;
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 namespace Day11
 {
@@ -15,7 +16,7 @@ namespace Day11
         [Test]
         public void TestGetMovableCombinations()
         {
-            var state = new State {Floors = new[] {new List<string> {"AB", "AC", "AD"},}};
+            var state = new State { Floors = new[] { new List<string> { "AB", "AC", "AD" }, } };
             state.GetMovableCombinations().Select(s => string.Join(",", s.OrderBy(i => i))).Should().HaveCount(6).And.Contain(new[]
             {
                 "AB",
@@ -32,22 +33,22 @@ namespace Day11
         {
             var state1 = new State
             {
-                Floors = new []
+                Floors = new[]
                 {
-                    new List<string> {"AB", "AC", "AD"}, 
-                    new List<string> {"AC", "AD"}, 
-                    new List<string> {"AD"}, 
+                    new List<string> {"AB", "AC", "AD"},
+                    new List<string> {"AC", "AD"},
+                    new List<string> {"AD"},
                     new List<string> {"AD", "AG", "AH"}
                 },
                 Pos = 1
             };
             var state2 = new State
             {
-                Floors = new []
+                Floors = new[]
                 {
-                    new List<string> {"AB", "AC", "AD"}, 
-                    new List<string> {"AC", "AD"}, 
-                    new List<string> {"AD"}, 
+                    new List<string> {"AB", "AC", "AD"},
+                    new List<string> {"AC", "AD"},
+                    new List<string> {"AD"},
                     new List<string> {"AD", "AG", "AH"}
                 },
                 Pos = 1
@@ -60,22 +61,22 @@ namespace Day11
         {
             var state1 = new State
             {
-                Floors = new []
+                Floors = new[]
                 {
-                    new List<string> {"AB", "AC", "AD"}, 
-                    new List<string> {"AC", "AD"}, 
-                    new List<string> {"AD"}, 
+                    new List<string> {"AB", "AC", "AD"},
+                    new List<string> {"AC", "AD"},
+                    new List<string> {"AD"},
                     new List<string> {"AD", "AG"}
                 },
                 Pos = 1
             };
             var state2 = new State
             {
-                Floors = new []
+                Floors = new[]
                 {
-                    new List<string> {"AB", "AC", "AD"}, 
-                    new List<string> {"AC", "AD"}, 
-                    new List<string> {"AD"}, 
+                    new List<string> {"AB", "AC", "AD"},
+                    new List<string> {"AC", "AD"},
+                    new List<string> {"AD"},
                     new List<string> {"AD", "AG", "AH"}
                 },
                 Pos = 1
@@ -86,16 +87,19 @@ namespace Day11
         [Test]
         public void Advance()
         {
-            var state = new State { Floors = new[]
+            var state = new State
+            {
+                Floors = new[]
             {
                 new List<string> { "AB", "AC", "AD" },
-                new List<string>(), 
-                new List<string>(), 
+                new List<string>(),
+                new List<string>(),
                 new List<string>()
-            } };
-            var newState = state.ApplyMove(new[] {"AB", "AC"}, 1);
-            newState.Floors[1].Should().HaveCount(2).And.Contain(new[] {"AB", "AC"});
-            newState.Floors[0].Should().HaveCount(1).And.Contain(new[] {"AD"});
+            }
+            };
+            var newState = state.ApplyMove(new[] { "AB", "AC" }, 1);
+            newState.Floors[1].Should().HaveCount(2).And.Contain(new[] { "AB", "AC" });
+            newState.Floors[0].Should().HaveCount(1).And.Contain(new[] { "AD" });
             newState.Pos.Should().Be(1);
         }
 
@@ -122,7 +126,7 @@ namespace Day11
                     new List<string>()
                 }
             };
-            var states = new List<State> { badState, goodState};
+            var states = new List<State> { badState, goodState };
             states.Sort();
             states.First().Should().Be(goodState);
         }
@@ -137,7 +141,7 @@ namespace Day11
         [TestCase(true, "THM", "LIM", "PRM")]
         public void IsValidTest(bool isValid, params string[] items)
         {
-            var state = new State {Floors = new[] {new List<string>(items)}};
+            var state = new State { Floors = new[] { new List<string>(items) } };
             state.IsValid().Should().Be(isValid);
         }
 
@@ -319,23 +323,21 @@ namespace Day11
                 floor.Sort();
             }
 
-            var allStates = new List<State> {initialState};
+            var sortedStates = new List<State> {initialState};
             State completeState = null;
-            while (completeState == null)
+            while (true)
             {
-                var allNextStates = new List<State>();
-                foreach (var state in allStates)
-                {
-                    var nextStates = state.GetTransitions().Where(s => s.IsValid() && !allStates.Contains(s)).ToArray();
-                    completeState = nextStates.FirstOrDefault(s => s.IsComplete());
-                    if (completeState != null) break;
-                    //LogManager.GetCurrentClassLogger().Debug($"{nextStates.Length}");
-                    allNextStates.AddRange(nextStates);
-                }
-                var prevCount = allStates.Count;
-                allStates.AddRange(allNextStates);
-                allStates.Sort();
-                LogManager.GetCurrentClassLogger().Info($"States: {prevCount} + {allNextStates.Count} = {allStates.Count}");
+                var bestState = sortedStates.OrderBy(s => s.GetScore()).First(s => !s.Visited);
+                bestState.Visited = true;
+                var nextStates = bestState.GetTransitions().Where(s => s.IsValid() && !sortedStates.Contains(s)).ToArray();
+                //if(nextStates.Any()) sortedStates.RemoveAt(0);
+                sortedStates.AddRange(nextStates);
+
+                completeState = nextStates.FirstOrDefault(s => s.IsComplete());
+                if (completeState != null) break;
+                //LogManager.GetCurrentClassLogger().Debug($"{nextStates.Length}");
+                
+                LogManager.GetCurrentClassLogger().Info($"States: {sortedStates.Count}");
                 //allStates = allStates.Take((int) 1e5).ToList();
             }
             for (int index = completeState.Path.Count - 1; index >= 0; index--)
@@ -365,32 +367,38 @@ namespace Day11
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             if (Pos != other.Pos) return false;
-            var floorsEqual = Floors[0].SequenceEqual(other.Floors[0])
-                && Floors[1].SequenceEqual(other.Floors[1])
-                && Floors[2].SequenceEqual(other.Floors[2])
-                && Floors[3].SequenceEqual(other.Floors[3]);
+            var floorHashes = FloorHashes();
+            var otherFloorHashes = other.FloorHashes();
+            var floorsEqual = floorHashes.Equals(otherFloorHashes);
             return floorsEqual;
+        }
+
+        private string FloorHashes()
+        {
+//            var floorHashes = string.Join(", ", Floors.Select(f => f.OrderBy(s => s)));
+            var floorHashes = string.Join(", ", Floors.Select(f => new string(f.Select(i => i.Last()).OrderBy(c => c).ToArray())));
+            return floorHashes;
         }
 
         public bool Degenerate()
         {
-            var degenerate = 
-                Floors[0].Any() && 
-                !Floors[1].Any() && 
-                !Floors[2].Any() && 
+            var degenerate =
+                Floors[0].Any() &&
+                !Floors[1].Any() &&
+                !Floors[2].Any() &&
                 Floors[3].Any();
-            if(degenerate) LogManager.GetLogger("Degenerate").Info("Degenerate!");
+            if (degenerate) LogManager.GetLogger("Degenerate").Info("Degenerate!");
             return degenerate;
         }
 
         public string Render()
         {
-            var render = string.Join("\n", Floors.Select((f, i) => new {f,i}).OrderByDescending(a => a.i).Select(a => 
-            {
-                var abbreviatedItems = a.f.Select(s => new string(new[] { s[0], s[2]}));
-                var code = $"F{a.i + 1} " + (Pos == a.i ? "E " : "  ") + string.Join(" ", abbreviatedItems);
-                return code;
-            }));
+            var render = string.Join("\n", Floors.Select((f, i) => new { f, i }).OrderByDescending(a => a.i).Select(a =>
+               {
+                   var abbreviatedItems = a.f.Select(s => new string(new[] { s[0], s[2] }));
+                   var code = $"F{a.i + 1} " + (Pos == a.i ? "E " : "  ") + string.Join(" ", abbreviatedItems);
+                   return code;
+               }));
             return render;
         }
 
@@ -402,9 +410,9 @@ namespace Day11
         public int GetScore()
         {
             //low == good
-            var topHeaviness = Floors[3].Count*4 +
-                               Floors[2].Count*3 +
-                               Floors[1].Count*2 +
+            var topHeaviness = Floors[3].Count * 4 +
+                               Floors[2].Count * 3 +
+                               Floors[1].Count * 2 +
                                Floors[0].Count;
             return -topHeaviness;
         }
@@ -414,14 +422,14 @@ namespace Day11
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((State) obj);
+            return Equals((State)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((Floors != null ? Floors.Aggregate(19, (i,f) => i * f.Aggregate(199, (j,s) => j * s.GetHashCode())) : 0)*397) ^ Pos;
+                return (Floors != null ? FloorHashes().GetHashCode() * 397 : 0) ^ Pos;
             }
         }
 
@@ -441,7 +449,7 @@ namespace Day11
 
         public State()
         {
-            Path = new List<State> {this};
+            Path = new List<State> { this };
         }
 
         public List<State> Path;
@@ -455,7 +463,7 @@ namespace Day11
 
         public bool IsValid()
         {
-            var isValid = Floors.All(ContentsCompatible);
+            var isValid = Floors.All(ContentsCompatible) && Depth < 100;
             return isValid;
         }
 
@@ -488,10 +496,10 @@ namespace Day11
             var movableCombinations = new List<string[]>();
             for (int i = 0; i < Floors[Pos].Count; i++)
             {
-                movableCombinations.Add(new []{Floors[Pos][i]});
+                movableCombinations.Add(new[] { Floors[Pos][i] });
                 for (int j = i + 1; j < Floors[Pos].Count; j++)
                 {
-                    movableCombinations.Add(new [] {Floors[Pos][i], Floors[Pos][j]});
+                    movableCombinations.Add(new[] { Floors[Pos][i], Floors[Pos][j] });
                 }
             }
 
@@ -513,7 +521,7 @@ namespace Day11
             var movableCombinations = GetMovableCombinations();
             if (Pos > 0)
             {
-                states.AddRange(movableCombinations.Select(s => ApplyMove(s, - 1)));
+                states.AddRange(movableCombinations.Select(s => ApplyMove(s, -1)));
             }
             if (Pos < 3)
             {
@@ -522,5 +530,7 @@ namespace Day11
             var transitions = states.Where(s => !Path.Contains(s) && !s.Degenerate()).ToArray();
             return transitions;
         }
+
+        public bool Visited { get; set; }
     }
 }

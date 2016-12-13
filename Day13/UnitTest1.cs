@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NLog;
 
 namespace Day13
 {
@@ -27,16 +28,31 @@ namespace Day13
         [TestMethod]
         public void RouteExample()
         {
-            var stepsToDest = Room.GetDistance(10, 7, 4);
+            var stepsToDest = Room.GetDistance(7, 4, 10);
             Assert.AreEqual(11, stepsToDest);
         }
 
+        [TestMethod]
+        public void RoutePart1()
+        {
+            var stepsToDest = Room.GetDistance(31,39,1358);
+            Console.Out.WriteLine(stepsToDest);
+            
+        }
+
+
+        [TestMethod]
+        public void Part2()
+        {
+            var countUnder50 = Room.GetCountUnder(1358, 50);
+            Console.Out.WriteLine(countUnder50);
+        }
     }
 
     public static class Room
     {
         public static List<Pos> Visited { get; }= new List<Pos>();
-        public static int GetDistance(int n, int targetX, int targetY)
+        public static int GetDistance(int targetX, int targetY, int n)
         {
             Visited.Add(new Pos(1,1,n, 0));
             while (true)
@@ -54,12 +70,47 @@ namespace Day13
                     };
                     var validUnfilledMoves = allMoves.Where(p => p.IsValid() && !p.IsFilled());
                     moves = validUnfilledMoves.Where(p => !Visited.Contains(p)).ToList();
-                    if (moves.Any()) break;
+                    if (moves.Any())
+                    {
+                        break;
+                    }
                 }
-                if(moves == null) throw new InvalidOperationException("Stuck!");
+                if(moves == null || !moves.Any()) throw new InvalidOperationException("Stuck!");
 
                 var dest = moves.FirstOrDefault(p => p.X == targetX && p.Y == targetY);
                 if (dest != null) return dest.Depth;
+                Visited.AddRange(moves);
+
+            }
+        }
+
+        public static int GetCountUnder(int n, int maxDepth)
+        {
+            Visited.Add(new Pos(1,1,n, 0));
+            while (true)
+            {
+                List<Pos> moves = null;
+                foreach (var orig in Visited)
+                {
+                    var allMoves = new List<Pos>
+                    {
+                        orig.Left(),
+                        orig.Right(),
+                        orig.Down(),
+                        orig.Up()
+                    };
+                    var validUnfilledMoves = allMoves.Where(p => p.IsValid() && !p.IsFilled() && p.Depth <= maxDepth);
+                    moves = validUnfilledMoves.Where(p => !Visited.Contains(p)).ToList();
+                    if (moves.Any())
+                    {
+                        break;
+                    }
+                }
+                if (moves == null || !moves.Any())
+                {
+                    return Visited.Count;
+                };
+
                 Visited.AddRange(moves);
 
             }

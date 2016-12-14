@@ -32,10 +32,12 @@ namespace Day13
             Assert.AreEqual(11, stepsToDest);
         }
 
+
+        const int puzzleInput = 1358;
         [TestMethod]
         public void RoutePart1()
         {
-            var stepsToDest = Room.GetDistance(31,39,1358);
+            var stepsToDest = Room.GetDistance(31,39, puzzleInput);
             Console.Out.WriteLine(stepsToDest);
             
         }
@@ -44,7 +46,7 @@ namespace Day13
         [TestMethod]
         public void Part2()
         {
-            var countUnder50 = Room.GetCountUnder(1358, 50);
+            var countUnder50 = Room.GetCountUnder(puzzleInput, 50);
             Console.Out.WriteLine(countUnder50);
         }
     }

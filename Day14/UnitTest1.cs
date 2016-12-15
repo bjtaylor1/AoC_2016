@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NLog;
 
 namespace Day14
 {
@@ -19,10 +20,25 @@ namespace Day14
         }
 
         [TestMethod]
-        public void Feedback1()
+        public void Part1()
         {
             var index = new KeyFinder("cuanljph").FindIndex();
             Assert.IsTrue(index < 24398); //wrong!
+            Console.Out.WriteLine(index);
+        }
+
+        [TestMethod]
+        public void Part2Example()
+        {
+            var index = new KeyFinder("abc",2016).FindIndex();
+            Assert.AreEqual(22551, index);
+        }
+
+
+        [TestMethod]
+        public void Part2()
+        {
+            var index = new KeyFinder("cuanljph", 2016).FindIndex();
             Console.Out.WriteLine(index);
         }
     }
@@ -30,16 +46,18 @@ namespace Day14
     public class KeyFinder
     {
         private readonly string salt;
+        private readonly int numKeyStretches;
 
-        public KeyFinder(string salt)
+        public KeyFinder(string salt, int numKeyStretches = 0)
         {
             this.salt = salt;
+            this.numKeyStretches = numKeyStretches;
         }
 
         private readonly string[] containsTriple = Enumerable.Repeat("", UInt16.MaxValue).ToArray();
         private readonly string[] nextThousandContainsFive = Enumerable.Repeat("", UInt16.MaxValue).ToArray();
         private readonly List<int> validIndexes = new List<int>();
-        private static readonly MD5 md5 = MD5.Create();
+        private readonly MD5 md5 = MD5.Create();
         public int FindIndex()
         {
             int limit = int.MaxValue;
@@ -59,7 +77,7 @@ namespace Day14
 
                             if (validIndexes.Count == 64)
                             {
-                                limit = i + 10000;
+                                limit = i + 1001;
                             }
                         }
                     }
@@ -78,12 +96,23 @@ namespace Day14
         private static Regex isTriple = new Regex(@"([\w\d])\1\1", RegexOptions.Compiled);
         private static Regex isFive = new Regex(@"([\w\d])\1\1\1\1", RegexOptions.Compiled);
 
-        static string GetMd5Hash(string input)
+        string GetMd5HashSingle(string input)
         {
-            byte[] data = md5.ComputeHash(Encoding.ASCII.GetBytes(input));
-
-            var res = data.Aggregate(new StringBuilder(), (sb, b) => sb.Append(b.ToString("x2"))).ToString();
+            byte[] data = Encoding.ASCII.GetBytes(input);
+            var hash = md5.ComputeHash(data);
+            var res = hash.Aggregate(new StringBuilder(), (sb, b) => sb.Append(b.ToString("x2"))).ToString();
             return res;
+        }
+
+        string GetMd5Hash(string input)
+        {
+            string result = input;
+            for (int i = 0; i < numKeyStretches+1; i++)
+            {
+                result = GetMd5HashSingle(result);
+            }
+            LogManager.GetCurrentClassLogger().Info($"md5({input}) = {result}");
+            return result;
         }
 
     }

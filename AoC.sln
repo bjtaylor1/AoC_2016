@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Day14", "Day14\Day14.csproj
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Day15", "Day15\Day15.vcxproj", "{7EB6AB8C-2D7E-4783-B5AF-33C323074350}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Day15DotNet", "Day15DotNet\Day15DotNet.csproj", "{D5D22C82-C4ED-464B-B787-11E9D352736D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -221,6 +223,18 @@ Global
 		{7EB6AB8C-2D7E-4783-B5AF-33C323074350}.Release|x64.Build.0 = Release|x64
 		{7EB6AB8C-2D7E-4783-B5AF-33C323074350}.Release|x86.ActiveCfg = Release|Win32
 		{7EB6AB8C-2D7E-4783-B5AF-33C323074350}.Release|x86.Build.0 = Release|Win32
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Debug|x64.Build.0 = Debug|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Debug|x86.Build.0 = Debug|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Release|x64.ActiveCfg = Release|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Release|x64.Build.0 = Release|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Release|x86.ActiveCfg = Release|Any CPU
+		{D5D22C82-C4ED-464B-B787-11E9D352736D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

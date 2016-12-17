@@ -67,13 +67,13 @@ namespace Day17
         public Iteration GetPathToTarget()
         {
             var iterations = new List<Iteration> {new Iteration(new Pos(0,0), "", this)};
-            Iteration[] unvisitedIterations;
-            while ((unvisitedIterations = iterations.Where(i => !i.Visited).ToArray()).Any()) //!(targets = iterations.Where(i => i.Pos.X == 3 && i.Pos.Y == 3).ToArray()).Any())
+            List<Iteration> unvisitedIterations;
+            while ((unvisitedIterations = iterations.Where(i => !i.Visited).ToList()).Any()) //!(targets = iterations.Where(i => i.Pos.X == 3 && i.Pos.Y == 3).ToArray()).Any())
             {
 /*
                 var positions = iterations.Select(i => i.Pos).Distinct().ToArray();
 */
-                iterations.Sort((i1, i2) =>
+                unvisitedIterations.Sort((i1, i2) =>
                 {
                     {
                         var c = i1.Visited.CompareTo(i2.Visited);
@@ -96,33 +96,19 @@ namespace Day17
                     return (-i1.Path.Length).CompareTo(-i2.Path.Length);
                 });
 
-                if(iterations.GroupBy(i => i.Path).Any(g => g.Count() > 1)) throw new InvalidOperationException("Duplicate paths");
-                var iteration = iterations.First();
+                if(unvisitedIterations.GroupBy(i => i.Path).Any(g => g.Count() > 1)) throw new InvalidOperationException("Duplicate paths");
+                var iteration = unvisitedIterations.First();
+
                 if(iteration.Visited) throw new InvalidOperationException("Repetition");
-                iteration.Visited = true;
                 Iteration[] newImprovements = iteration.Expand();
+                iteration.Visited = true;
 
                 foreach (var newIteration in newImprovements)
                 {
                     if (newIteration.IsTarget())
                     {
-                        LogManager.GetCurrentClassLogger().Info(newIteration.Path.Length);
                         Targets.Add(newIteration);
-/*
-                        if (WantLongest && newIteration.Path.Length < Targets.Max(i => i.Path.Length))
-                        {
-                            //if it's a target shorter than the current longest, back-prune it
-                            for (int l = newIteration.Path.Length; l > 0; l--)
-                            {
-                                var backPrunePath = newIteration.Path.Substring(0, l);
-
-                                foreach (var backPruneNode in iterations.Where(i => i.Path == backPrunePath))
-                                {
-                                    backPruneNode.CantGo()
-                                }
-                            }
-                        }
-*/
+                        LogManager.GetCurrentClassLogger().Info($"Found: {newIteration.Path.Length}, best: {Targets.Max(t => t.Path.Length)}, iterations: {iterations.Count}");
                     }
                     else
                     {

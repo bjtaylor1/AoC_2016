@@ -18,20 +18,48 @@ namespace Day17
         [TestCase("ihgpwlah", "DDRRRD")]
         [TestCase("kglvqrro", "DDUDRLRRUDRD")]
         [TestCase("ulqzkmiv", "DRURDRUDDLLDLUURRDULRLDUUDDDRR")]
-        public void Example(string passcode, string path)
+        public void Part1Example(string passcode, string path)
         {
             var iteration = new Iterator(passcode).GetPathToTarget();
             Assert.AreEqual(path, iteration.Path);
         }
+
+        [TestCase("pgflpeqp")] //part 1
+        public void DoPuzzlePart1(string passcode)
+        {
+            var iteration = new Iterator(passcode).GetPathToTarget();
+            Console.Out.WriteLine(iteration.Path);
+        }
+
+        [TestCase("ihgpwlah", 370)]
+        [TestCase("kglvqrro", 492)]
+        [TestCase("ulqzkmiv", 830)]
+        public void Part2Example(string passcode, int longest)
+        {
+            var iteration = new Iterator(passcode, true).GetPathToTarget();
+            Assert.AreEqual(longest, iteration.Path.Length);
+        }
+
+
+        [TestCase("pgflpeqp")] //part 2
+        public void DoPuzzlePart2(string passcode)
+        {
+            var iteration = new Iterator(passcode, true).GetPathToTarget();
+            Console.Out.WriteLine(iteration.Path);
+        }
+
     }
 
     public class Iterator
     {
+        public bool WantLongest { get; }
         public string Passcode { get; }
-
-        public Iterator(string passcode)
+        private readonly int wantLongestMultiplier;
+        public Iterator(string passcode, bool wantLongest = false)
         {
+            this.WantLongest = wantLongest;
             Passcode = passcode;
+            wantLongestMultiplier = wantLongest ? -1 : 1;
         }
 
         public List<Iteration> Targets { get; } = new List<Iteration>();
@@ -39,15 +67,19 @@ namespace Day17
         public Iteration GetPathToTarget()
         {
             var iterations = new List<Iteration> {new Iteration(new Pos(0,0), "", this)};
-            while (iterations.Any(i => !i.Visited)) //!(targets = iterations.Where(i => i.Pos.X == 3 && i.Pos.Y == 3).ToArray()).Any())
+            Iteration[] unvisitedIterations;
+            while ((unvisitedIterations = iterations.Where(i => !i.Visited).ToArray()).Any()) //!(targets = iterations.Where(i => i.Pos.X == 3 && i.Pos.Y == 3).ToArray()).Any())
             {
+/*
                 var positions = iterations.Select(i => i.Pos).Distinct().ToArray();
+*/
                 iterations.Sort((i1, i2) =>
                 {
                     {
                         var c = i1.Visited.CompareTo(i2.Visited);
                         if (c != 0) return c;
                     }
+/*
                     {
                         var c = i1.ClosenessTo(3, 3).CompareTo(i2.ClosenessTo(3, 3));
                         if (c != 0) return c;
@@ -60,45 +92,69 @@ namespace Day17
                         var c = (-i1.AvailableDirections.Length).CompareTo(-i2.AvailableDirections.Length);
                         if (c != 0) return c;
                     }
+*/
                     return (-i1.Path.Length).CompareTo(-i2.Path.Length);
                 });
 
-
+                if(iterations.GroupBy(i => i.Path).Any(g => g.Count() > 1)) throw new InvalidOperationException("Duplicate paths");
                 var iteration = iterations.First();
+                if(iteration.Visited) throw new InvalidOperationException("Repetition");
                 iteration.Visited = true;
                 Iteration[] newImprovements = iteration.Expand();
 
-                foreach (var newImprovement in newImprovements)
+                foreach (var newIteration in newImprovements)
                 {
-                    if (newImprovement.IsTarget())
+                    if (newIteration.IsTarget())
                     {
-                        LogManager.GetCurrentClassLogger().Log(newImprovement.Path == "DRURDRUDDLLDLUURRDULRLDUUDDDRR" ? LogLevel.Info : LogLevel.Warn, newImprovement);
-                        Targets.Add(newImprovement);
+                        LogManager.GetCurrentClassLogger().Info(newIteration.Path.Length);
+                        Targets.Add(newIteration);
+/*
+                        if (WantLongest && newIteration.Path.Length < Targets.Max(i => i.Path.Length))
+                        {
+                            //if it's a target shorter than the current longest, back-prune it
+                            for (int l = newIteration.Path.Length; l > 0; l--)
+                            {
+                                var backPrunePath = newIteration.Path.Substring(0, l);
+
+                                foreach (var backPruneNode in iterations.Where(i => i.Path == backPrunePath))
+                                {
+                                    backPruneNode.CantGo()
+                                }
+                            }
+                        }
+*/
                     }
                     else
                     {
-                        iterations.Add(newImprovement);
+                        iterations.Add(newIteration);
                     }
                 }
 
                 if (Targets.Any())
                 {
-                    //purne all branches that lead to a target longer than the best one
-                    Targets.Sort((i1, i2) => i1.Path.Length.CompareTo(i2.Path.Length));
-                    var bestTarget = Targets.First();
-                    var degeneratePathStarts = Targets.Select(i => i.Path.Substring(0, bestTarget.Path.Length)).Distinct().ToArray();
-                    var removed = 0;
-                    iterations.RemoveAll(i =>
+                    if (WantLongest)
                     {
-                        var remove = degeneratePathStarts.Any(s => i.Path.StartsWith(s));
-                        if (remove) removed++;
-                        return remove;
-                    });
-                    if(removed > 0) LogManager.GetCurrentClassLogger().Info($"Removed {removed} degenerates");
+
+                    }
+                    else
+                    {
+                        //prune all branches that lead to a target longer than the best one
+                        Targets.Sort((i1, i2) => i1.Path.Length.CompareTo(i2.Path.Length));
+                        var bestTarget = Targets.First();
+                        var degeneratePathStarts = Targets.Select(i => i.Path.Substring(0, bestTarget.Path.Length)).Distinct().ToArray();
+                        var removed = 0;
+                        iterations.RemoveAll(i =>
+                        {
+                            var remove = degeneratePathStarts.Any(s => i.Path.StartsWith(s));
+                            if (remove) removed++;
+                            return remove;
+                        });
+                        if (removed > 0) LogManager.GetCurrentClassLogger().Info($"Removed {removed} degenerates");
+                    }
                 }
             }
 
-            var bestIteration = Targets.OrderBy(i => i.Path.Length).First();
+            var bestIteration = Targets.OrderBy(i => wantLongestMultiplier * i.Path.Length).First();
             return bestIteration;
         }
     }
@@ -144,9 +200,13 @@ namespace Day17
 
         public Iteration[] Expand()
         {
+            if(Visited) throw new InvalidOperationException($"Already been expanded: {this}");
             var positions = AvailablePositions
                 .Select(a => new Iteration(a.Item1, Path + a.Item2, iterator))
-                .Where(a => !iterator.Targets.Any(t => t.Path.StartsWith(a.Path)))
+                .Where(a =>
+                {
+                    return !iterator.Targets.Any(t => t.Path.StartsWith(a.Path));
+                })
                 .ToArray();
             return positions;
         }

@@ -45,7 +45,7 @@ namespace Day17
         public void DoPuzzlePart2(string passcode)
         {
             var iteration = new Iterator(passcode, true).GetPathToTarget();
-            Console.Out.WriteLine(iteration.Path);
+            Console.Out.WriteLine(iteration.Path.Length);
         }
 
     }
@@ -67,13 +67,12 @@ namespace Day17
         public Iteration GetPathToTarget()
         {
             var iterations = new List<Iteration> {new Iteration(new Pos(0,0), "", this)};
-            List<Iteration> unvisitedIterations;
-            while ((unvisitedIterations = iterations.Where(i => !i.Visited).ToList()).Any()) //!(targets = iterations.Where(i => i.Pos.X == 3 && i.Pos.Y == 3).ToArray()).Any())
+            while (iterations.Any()) //!(targets = iterations.Where(i => i.Pos.X == 3 && i.Pos.Y == 3).ToArray()).Any())
             {
 /*
                 var positions = iterations.Select(i => i.Pos).Distinct().ToArray();
 */
-                unvisitedIterations.Sort((i1, i2) =>
+                iterations.Sort((i1, i2) =>
                 {
                     {
                         var c = i1.Visited.CompareTo(i2.Visited);
@@ -96,12 +95,12 @@ namespace Day17
                     return (-i1.Path.Length).CompareTo(-i2.Path.Length);
                 });
 
-                if(unvisitedIterations.GroupBy(i => i.Path).Any(g => g.Count() > 1)) throw new InvalidOperationException("Duplicate paths");
-                var iteration = unvisitedIterations.First();
+                if(iterations.GroupBy(i => i.Path).Any(g => g.Count() > 1)) throw new InvalidOperationException("Duplicate paths");
+                var iteration = iterations.First();
 
                 if(iteration.Visited) throw new InvalidOperationException("Repetition");
                 Iteration[] newImprovements = iteration.Expand();
-//                iteration.Visited = true;
+
                 iterations.Remove(iteration);
 
                 foreach (var newIteration in newImprovements)
@@ -187,7 +186,6 @@ namespace Day17
 
         public Iteration[] Expand()
         {
-            if(Visited) throw new InvalidOperationException($"Already been expanded: {this}");
             var positions = AvailablePositions
                 .Select(a => new Iteration(a.Item1, Path + a.Item2, iterator))
                 .Where(a =>

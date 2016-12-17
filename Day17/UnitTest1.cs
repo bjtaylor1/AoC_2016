@@ -101,7 +101,8 @@ namespace Day17
 
                 if(iteration.Visited) throw new InvalidOperationException("Repetition");
                 Iteration[] newImprovements = iteration.Expand();
-                iteration.Visited = true;
+//                iteration.Visited = true;
+                iterations.Remove(iteration);
 
                 foreach (var newIteration in newImprovements)
                 {

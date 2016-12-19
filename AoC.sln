@@ -46,7 +46,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "headers", "headers", "{AE995B6B-6384-4041-8B6D-0FF96327B054}"
 	ProjectSection(SolutionItems) = preProject
 		md5helper.h = md5helper.h
-		..\AoC2015\puzzle_iterator.h = ..\AoC2015\puzzle_iterator.h
+		puzzle_iterator.h = puzzle_iterator.h
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Day17b", "Day17b\Day17b.vcxproj", "{C1278B63-3B59-4EB2-97C5-2C5A7197E81B}"

@@ -12,3 +12,6 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <vector>
+#include <algorithm>
+#include "..\puzzle_iterator.h"

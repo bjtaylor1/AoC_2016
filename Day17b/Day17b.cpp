@@ -60,8 +60,6 @@ template <> bool puzzle_iterator<iteration>::is_cyclic()
 ostream& operator<<(ostream& os, const iteration& i)
 {
 	cout << "\r" << i.path.size();
-
-	//if(i.path.size() > 0) os << i.path.substr(1, 50);
 	return os;
 }
 

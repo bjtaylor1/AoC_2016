@@ -9,15 +9,16 @@ public:
 	{
 		vector<TIteration> its;
 		its.push_back(start);
-		while (!its.begin()->is_target)
+		while (its.begin()->continue_processing())
 		{
-			cout << *its.begin() << endl;
+			cout << *its.begin();
 			const vector<TIteration> newitems = its.begin()->expand();
 			if (!is_cyclic())
 			{
 				its.erase(its.begin());
 			}
 			its.insert(its.end(), newitems.begin(), newitems.end());
+
 			sort(its.begin(), its.end());
 		}
 		return *its.begin();
@@ -26,5 +27,10 @@ public:
 	bool is_cyclic()
 	{
 		return true;
+	}
+
+	bool is_exhaustive()
+	{
+		return false;
 	}
 };

@@ -20,7 +20,7 @@ namespace Day20b
 
 
 
-        [TestInitialize]
+        //[TestInitialize]
         public void Initialize()
         {
             var blockedIps = GetBlockedIpsOfInput();
@@ -47,6 +47,14 @@ namespace Day20b
         public void Part2()
         {
             Console.Out.WriteLine(GetCountUnblocked());
+        }
+
+
+        [TestMethod]
+        public void Part2_b()
+        {
+            int count = (int) ((long) 4294967295/64);
+            var l = new long[count];
         }
 
         private static long GetLowestUnblocked()

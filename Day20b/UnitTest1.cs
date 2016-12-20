@@ -20,7 +20,7 @@ namespace Day20b
 
 
 
-        //[TestInitialize]
+        [TestInitialize]
         public void Initialize()
         {
             var blockedIps = GetBlockedIpsOfInput();
@@ -29,16 +29,14 @@ namespace Day20b
                 foreach (var blockedIp in blockedIps)
                 {
                     fileStream.Seek(blockedIp[0], SeekOrigin.Begin);
-                    for (uint i = blockedIp[0]; i < blockedIp[1] + 1; i++)
-                    {
-                        fileStream.WriteByte(1);
-                    }
+                    var count = (int)(blockedIp[1] - blockedIp[0]) + 1;
+                    fileStream.Write(Enumerable.Repeat((byte)1, count).ToArray(), 0, count);
                     LogManager.GetCurrentClassLogger().Info($"{blockedIp[0]} - {blockedIp[1]}");
                 }
             }
         }
 
-        const int BUFFERSIZE = 0Xfffffff;
+        const int BUFFERSIZE = (int)(uint.MaxValue / 32)+1;
         [TestMethod]
         public void Part1()
         {
@@ -51,10 +49,10 @@ namespace Day20b
             Console.Out.WriteLine(GetCountUnblocked());
         }
 
-        private static int GetLowestUnblocked()
+        private static long GetLowestUnblocked()
         {
             byte[] buffer = new byte[BUFFERSIZE];
-            int n = 0;
+            long n = 0;
             using (var fileStream = File.OpenRead("ips.dat"))
             {
                 while (n < fileStream.Length)
@@ -69,20 +67,24 @@ namespace Day20b
             }
         }
 
-        private static int GetCountUnblocked()
+        private static long GetCountUnblocked()
         {
             byte[] buffer = new byte[BUFFERSIZE];
-            int n = 0;
-            int result = 0;
+            long result = 0;
+            long n = 0;
             using (var fileStream = File.OpenRead("ips.dat"))
             {
-                while (n < fileStream.Length)
+                int n0;
+                do
                 {
-                    LogManager.GetCurrentClassLogger().Info($"{n}, {((double)n) / fileStream.Length:0.00%}");
-                    var n0 = fileStream.Read(buffer, 0, BUFFERSIZE);
-                    result += buffer.Take(n0).Count(b => b == 0);
+                    n0 = fileStream.Read(buffer, 0, BUFFERSIZE);
+                    var toExamine = buffer.Take(n0).ToArray();
+                    var count = toExamine.Count(b => b == 0);
+                    var i = toExamine.Select((b, index) => new {b, index = (long)index}).Where(a => a.b == 0).Select(a => a.index + n).ToArray();
+                    result += count;
+                    LogManager.GetCurrentClassLogger().Info($"{n0}, {(double) fileStream.Position/fileStream.Length:0.00%}, result = {result}");
                     n += n0;
-                }
+                } while (n0 > 0);
             }
             return result;
         }

@@ -16,7 +16,7 @@ const long long full = (long long)-1;
 
 void blacklist(long long* l, long long start, long long end)
 {
-	cout << start << " - " << end << endl;
+	//cout << start << " - " << end << endl;
 	long long minindex = (start / 64) + 1;
 	long long maxindex = end / 64;
 	if (maxindex > minindex)

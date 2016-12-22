@@ -2,8 +2,9 @@
 using namespace std;
 
 #include "puzzle_input.h"
+#include "pos.h"
 
-bool puzzle_input::add_node(vector<node>& nodes, const regex& r, const string& line, int lineNo)
+bool puzzle_input::add_node(map<long,node>& nodes, const regex& r, const string& line, int lineNo)
 {
 	smatch m;
 	if (regex_search(line, m, r))
@@ -14,13 +15,13 @@ bool puzzle_input::add_node(vector<node>& nodes, const regex& r, const string& l
 		int used = atoi(m[4].str().c_str());
 		int avail = atoi(m[5].str().c_str());
 		node n(x, y, size, used, avail, lineNo);
-		nodes.push_back(n);
+		nodes[pos::xy(x, y)] = n;
 		return true;
 	}
 	return false;
 }
 
-bool puzzle_input::add_nodes(vector<node>& nodes)
+bool puzzle_input::add_nodes(map<long,node>& nodes)
 {
 	int line = 1;
 	regex   r("^\/dev\/grid\/node\-x(\\d+)\-y(\\d+)"

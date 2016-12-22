@@ -3,6 +3,8 @@
 
 class puzzle_input
 {
+private:
+	static bool add_node(vector<node>& nodes, const regex& r, const string& line, int lineNo);
 public:
-	static std::vector<node> get_nodes();
+	static bool add_nodes(vector<node>& nodes);
 };

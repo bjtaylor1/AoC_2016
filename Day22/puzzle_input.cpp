@@ -21,6 +21,15 @@ bool puzzle_input::add_node(map<long,node>& nodes, const regex& r, const string&
 	return false;
 }
 
+#define EXAMPLE
+#ifdef EXAMPLE
+int node::MAXX = 2;
+int node::MAXY = 2;
+#else
+int node::MAXX = 30;
+int node::MAXY = 30;
+#endif
+
 bool puzzle_input::add_nodes(map<long,node>& nodes)
 {
 	int line = 1;
@@ -29,6 +38,17 @@ bool puzzle_input::add_nodes(map<long,node>& nodes)
 		"\\s*(\\d+)T"
 		"\\s*(\\d+)T");
 	return
+#ifdef EXAMPLE
+add_node(nodes, r, "/dev/grid/node-x0-y0   10T    8T     2T   80%", line++) &&
+add_node(nodes, r, "/dev/grid/node-x0-y1   11T    6T     5T   54%", line++) &&
+add_node(nodes, r, "/dev/grid/node-x0-y2   32T   28T     4T   87%", line++) &&
+add_node(nodes, r, "/dev/grid/node-x1-y0    9T    7T     2T   77%", line++) &&
+add_node(nodes, r, "/dev/grid/node-x1-y1    8T    0T     8T    0%", line++) &&
+add_node(nodes, r, "/dev/grid/node-x1-y2   11T    7T     4T   63%", line++) &&
+add_node(nodes, r, "/dev/grid/node-x2-y0   10T    6T     4T   60%", line++) &&
+add_node(nodes, r, "/dev/grid/node-x2-y1    9T    8T     1T   88%", line++) &&
+add_node(nodes, r, "/dev/grid/node-x2-y2    9T    6T     3T   66%", line++)
+#else
 add_node(nodes, r, "/dev/grid/node-x0-y0     94T   73T    21T   77%", line++) &&
 add_node(nodes, r, "/dev/grid/node-x0-y1     87T   64T    23T   73%", line++) &&
 add_node(nodes, r, "/dev/grid/node-x0-y2     94T   67T    27T   71%", line++) &&
@@ -990,5 +1010,6 @@ add_node(nodes, r, "/dev/grid/node-x30-y27   87T   70T    17T   80%", line++) &&
 add_node(nodes, r, "/dev/grid/node-x30-y28   87T   66T    21T   75%", line++) &&
 add_node(nodes, r, "/dev/grid/node-x30-y29   94T   65T    29T   69%", line++) &&
 add_node(nodes, r, "/dev/grid/node-x30-y30   85T   72T    13T   84%", line++)
+#endif
 ;
 }

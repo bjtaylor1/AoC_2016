@@ -28,6 +28,7 @@ void node::move_to(node& target)
 	if (target.avail < used) throw exception("Not enough space!");
 	target.avail -= used;
 	target.used += used;
+	avail += used;
 	used = 0;
 }
 
@@ -40,15 +41,15 @@ public:
 	map<long, node> nodes;
 	long depth;
 	long goalX, goalY;
-	bool is_target;
 	long score;
+	bool visited;
 	iteration(const map<long, node>& _nodes, long _depth, long _goalX, long _goalY) :
-		nodes(_nodes), depth(_depth), goalX(_goalX), goalY(_goalY), is_target(_goalX == 0 && _goalY == 0)
+		nodes(_nodes), depth(_depth), goalX(_goalX), goalY(_goalY), visited(false)
 	{
-		bool goalCanMoveLeft = _goalX > 0 && _nodes.at(pos::xy(_goalX - 1, _goalY)).avail < _nodes.at(pos::xy(_goalX, _goalY)).used;
-		bool goalCanMoveUp = _goalY > 0 && _nodes.at(pos::xy(_goalX, _goalY - 1)).avail < _nodes.at(pos::xy(_goalX, _goalY)).used;
-		bool goalCanMoveRight = goalX < node::MAXX && _nodes.at(pos::xy(_goalX + 1, _goalY)).avail < _nodes.at(pos::xy(_goalX, _goalY)).used;
-		bool goalCanMoveDown = goalY < node::MAXY && _nodes.at(pos::xy(_goalX, _goalY + 1)).avail < _nodes.at(pos::xy(_goalX, _goalY)).used;
+		bool goalCanMoveLeft = _goalX > 0 && _nodes.at(pos::xy(_goalX - 1, _goalY)).avail >= _nodes.at(pos::xy(_goalX, _goalY)).used;
+		bool goalCanMoveUp = _goalY > 0 && _nodes.at(pos::xy(_goalX, _goalY - 1)).avail >= _nodes.at(pos::xy(_goalX, _goalY)).used;
+		bool goalCanMoveRight = goalX < node::MAXX && _nodes.at(pos::xy(_goalX + 1, _goalY)).avail >= _nodes.at(pos::xy(_goalX, _goalY)).used;
+		bool goalCanMoveDown = goalY < node::MAXY && _nodes.at(pos::xy(_goalX, _goalY + 1)).avail >= _nodes.at(pos::xy(_goalX, _goalY)).used;
 		score = 0;
 		if (goalCanMoveLeft) score += 9;
 		if (goalCanMoveUp) score += 9;
@@ -59,6 +60,7 @@ public:
 	vector<iteration> expand()
 	{
 		vector<iteration> e;
+		visited = true;
 		for (int x = 0; x <= node::MAXX; x++)
 		{
 			for (int y = 0; y <= node::MAXY; y++)
@@ -69,7 +71,7 @@ public:
 					int newy = y + ymovements[move];
 					if (newx >= 0 && newy >= 0 && newx <= node::MAXX && newy <= node::MAXY)
 					{
-						if (nodes[pos::xy(newx, newy)].avail >= nodes[pos::xy(x, y)].used)
+						if (nodes[pos::xy(newx, newy)].avail >= nodes[pos::xy(x, y)].used && nodes[pos::xy(x,y)].used > 0)
 						{
 							int newGoalX, newGoalY;
 							if (x == goalX && y == goalY)
@@ -94,19 +96,22 @@ public:
 
 	bool continue_processing()
 	{
-		return !is_target;
+		return !(goalX == 0 && goalY == 0);
 	}
 
 	bool operator<(const iteration& rhs)
 	{
+		if (visited != rhs.visited) return visited < rhs.visited;
 		long lhsGoalDist = goalX + goalY;
 		long rhsGoalDist = rhs.goalX + rhs.goalY;
 		if (lhsGoalDist != rhsGoalDist) return lhsGoalDist < rhsGoalDist;
+		return score > rhs.score;
 	}
 };
 
 ostream& operator<<(ostream& os, const iteration& i)
 {
+	
 	if (node::MAXX <= 2)
 	{
 		for (long y = 0; y <= node::MAXY; y++)
@@ -114,14 +119,17 @@ ostream& operator<<(ostream& os, const iteration& i)
 			for (long x = 0; x <= node::MAXX; x++)
 			{
 				node n = i.nodes.at(pos::xy(x, y));
-				if (x == i.goalX && y == i.goalY) os << " G ";
-				else if (n.used > 20) os << " # ";
-				else if (n.used >= 6) os << " . ";
-				else os << " _ ";
+				if (x == i.goalX && y == i.goalY) os << "  ["; else os << "   ";
+				cout << setfill('0') << setw(2) << n.used << "/" 
+					 << setfill('0') << setw(2) << n.size;
+				if (x == i.goalX && y == i.goalY) os << "]  "; else os << " ";
+				
 			}
 			os << endl;
 		}
+		os << endl;
 	}
+	
 	return os;
 }
 
@@ -168,18 +176,15 @@ int main()
 	int maxY = max_element(nodes.begin(), nodes.end(), compare_y)->second.y;
 
 	iteration start(nodes, 0, node::MAXX, 0);
-	cout << start;
+
 	vector<iteration> firstlevel = start.expand();
 
-	for (vector<iteration>::const_iterator it = firstlevel.begin(); it != firstlevel.end(); it++)
-	{
-		cout << *it << endl << endl;
+	puzzle_iterator<iteration> iterator(start);
+	
+	iteration best = iterator.get_best();
+	
+	cout << "Best steps = " << best.depth << endl;
 
-	}
-	//puzzle_iterator<iteration> iterator(start);
-	
-	//iteration best = iterator.get_best();
-	
     return 0;
 }
 

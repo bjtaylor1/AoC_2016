@@ -4,9 +4,11 @@
 #include "stdafx.h"
 
 using namespace std;
-#include "puzzle_input.h";
-#include "pos.h";
+#include "puzzle_input.h"
+#include "pos.h"
 #include "../puzzle_iterator.h"
+
+extern long primes[];
 
 bool is_viable(map<long,node>::const_iterator it_A, map<long,node>::const_iterator it_B)
 {
@@ -35,16 +37,23 @@ void node::move_to(node& target)
 int xmovements[4];
 int ymovements[4];
 
+unsigned long long thecount = 0;
+
+int nextid = 0;
+
 class iteration
 {
 public:
+	
 	map<long, node> nodes;
 	long depth;
 	long goalX, goalY;
 	long score;
 	bool visited;
+	int id;
+	//long long hash;
 	iteration(const map<long, node>& _nodes, long _depth, long _goalX, long _goalY) :
-		nodes(_nodes), depth(_depth), goalX(_goalX), goalY(_goalY), visited(false)
+		nodes(_nodes), depth(_depth), goalX(_goalX), goalY(_goalY), visited(false), id(nextid++)
 	{
 		bool goalCanMoveLeft = _goalX > 0 && _nodes.at(pos::xy(_goalX - 1, _goalY)).avail >= _nodes.at(pos::xy(_goalX, _goalY)).used;
 		bool goalCanMoveUp = _goalY > 0 && _nodes.at(pos::xy(_goalX, _goalY - 1)).avail >= _nodes.at(pos::xy(_goalX, _goalY)).used;
@@ -55,12 +64,28 @@ public:
 		if (goalCanMoveUp) score += 9;
 		if (goalCanMoveRight) score += 1;
 		if (goalCanMoveDown) score += 1;
+
+		/*
+		hash = 0;
+		for(int x = 0; x <= node::MAXX; x++)
+		for (int y = 0; y <= node::MAXY; y++)
+		{
+			long prime = primes[x + ((node::MAXX + 1)*y)];
+			hash += prime * nodes.at(pos::xy(x, y)).used;
+		}
+		*/
 	}
 
-	vector<iteration> expand()
+	iteration with_visited() const
+	{
+		iteration vis(*this);
+		vis.visited = true;
+		return vis;
+	}
+
+	vector<iteration> expand() const
 	{
 		vector<iteration> e;
-		visited = true;
 		for (int x = 0; x <= node::MAXX; x++)
 		{
 			for (int y = 0; y <= node::MAXY; y++)
@@ -71,7 +96,7 @@ public:
 					int newy = y + ymovements[move];
 					if (newx >= 0 && newy >= 0 && newx <= node::MAXX && newy <= node::MAXY)
 					{
-						if (nodes[pos::xy(newx, newy)].avail >= nodes[pos::xy(x, y)].used && nodes[pos::xy(x,y)].used > 0)
+						if (nodes.at(pos::xy(newx, newy)).avail >= nodes.at(pos::xy(x, y)).used && nodes.at(pos::xy(x,y)).used > 0)
 						{
 							int newGoalX, newGoalY;
 							if (x == goalX && y == goalY)
@@ -94,24 +119,54 @@ public:
 		return e;
 	}
 
-	bool continue_processing()
+	bool continue_processing() const
 	{
 		return !(goalX == 0 && goalY == 0);
 	}
 
-	bool operator<(const iteration& rhs)
+	bool print() const
 	{
-		if (visited != rhs.visited) return visited < rhs.visited;
-		long lhsGoalDist = goalX + goalY;
-		long rhsGoalDist = rhs.goalX + rhs.goalY;
-		if (lhsGoalDist != rhsGoalDist) return lhsGoalDist < rhsGoalDist;
-		return score > rhs.score;
+		return node::MAXX <= 2 || (++thecount % 10) == 0;
 	}
 };
 
+bool operator<(const iteration& lhs, const iteration& rhs)
+{
+	//if (lhs.visited != rhs.visited) return lhs.visited < rhs.visited;
+	long lhsGoalDist = lhs.goalX + lhs.goalY;
+	long rhsGoalDist = rhs.goalX + rhs.goalY;
+	if (lhsGoalDist != rhsGoalDist) return lhsGoalDist < rhsGoalDist;
+
+	long crowdinglhs = 0;
+	long crowdingrhs = 0;
+	long lhshash = 0, rhshash = 0;
+	for(int x = 0; x < node::MAXX; x++)
+	for(int y = 0; y < node::MAXY; y++)
+	{
+		long usedlhs = lhs.nodes.at(pos::xy(x, y)).used;
+		long usedrhs = rhs.nodes.at(pos::xy(x, y)).used;
+		long nearnesslhs = node::MAXX + node::MAXY + 2 - (abs(x - lhs.goalX) + abs(y - lhs.goalY));
+		long nearnessrhs = node::MAXX + node::MAXY + 2 - (abs(x - rhs.goalX) + abs(y - rhs.goalY));
+		crowdinglhs += usedlhs * nearnesslhs;
+		crowdingrhs += usedrhs * nearnessrhs;
+
+		if (usedlhs != usedrhs) return usedlhs < usedrhs;
+
+		long prime = primes[x + ((node::MAXX + 1)*y)];
+		lhshash += prime * usedlhs;
+		rhshash += prime * usedrhs;
+	}
+
+	if (crowdinglhs != crowdingrhs) return crowdinglhs < crowdingrhs;
+	
+	return lhshash < rhshash;
+}
+
+#define PRINT
+
 ostream& operator<<(ostream& os, const iteration& i)
 {
-	
+#ifdef PRINT
 	if (node::MAXX <= 2)
 	{
 		for (long y = 0; y <= node::MAXY; y++)
@@ -122,14 +177,18 @@ ostream& operator<<(ostream& os, const iteration& i)
 				if (x == i.goalX && y == i.goalY) os << "  ["; else os << "   ";
 				cout << setfill('0') << setw(2) << n.used << "/" 
 					 << setfill('0') << setw(2) << n.size;
-				if (x == i.goalX && y == i.goalY) os << "]  "; else os << " ";
+				if (x == i.goalX && y == i.goalY) os << "]  "; else os << "   ";
 				
 			}
 			os << endl;
 		}
 		os << endl;
 	}
-	
+	else
+	{
+		os << "Goal: " << i.goalX << "," << i.goalY << " score = " << i.score << ", visited = " << i.visited << ", id = " << i.id;
+	}
+#endif
 	return os;
 }
 
@@ -146,8 +205,32 @@ void initialize_movements()
 	ymovements[3] = 0;
 }
 
+class test
+{
+public:
+	int score, id;
+	test(int _id, int _score) : id(_id), score(_score) {}
+	bool get_a_bool() const
+	{
+		return true;
+	}
+};
+
+bool operator<(const test& lhs, const test& rhs)
+{
+	return lhs.score < rhs.score;
+
+}
+
 int main()
 {
+
+	set<test> theset;
+	theset.insert(test(123, 9));
+	theset.insert(test(715, 9));
+	bool b = theset.begin()->get_a_bool();
+
+
 	initialize_movements();
 
 	map<long,node> nodes;
@@ -180,10 +263,19 @@ int main()
 	vector<iteration> firstlevel = start.expand();
 
 	puzzle_iterator<iteration> iterator(start);
+
+	try
+	{
+		iteration best = iterator.get_best();
+		cout << "Best : " << endl << best << endl << endl;
+		cout << "Best steps = " << best.depth << endl;
+
+	}
+	catch (exception ex)
+	{
+		cout << ex.what() << endl;
+	}
 	
-	iteration best = iterator.get_best();
-	
-	cout << "Best steps = " << best.depth << endl;
 
     return 0;
 }

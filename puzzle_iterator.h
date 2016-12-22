@@ -4,24 +4,69 @@ class puzzle_iterator
 public:
 	TIteration start;
 	puzzle_iterator(const TIteration& _start) : start(_start) {}
-
+	/**/
+	
+	static void get_best_unvisited(set<TIteration>& its)
+	{
+		set<TIteration>::const_iterator* it
+		for (set<TIteration>::iterator it = its.begin(); it != its.end(); it++)
+		{
+			if (!it->visited)
+			{
+				//return it;
+			}
+		}
+		//return its.end();
+	}
+	
 	TIteration get_best()
 	{
-		vector<TIteration> its;
-		its.push_back(start);
-		while (its.begin()->continue_processing())
+		set<TIteration> its;
+		its.insert(start);
+		set<TIteration>::const_iterator current = its.begin();
+		while (current->continue_processing())
 		{
-			cout << *its.begin();
-			const vector<TIteration> newitems = its.begin()->expand();
-			if (!is_cyclic())
+			if (current->print())
 			{
-				its.erase(its.begin());
+				cout << "size = " << its.size() << endl;
+				cout << *current << endl;
 			}
-			its.insert(its.end(), newitems.begin(), newitems.end());
+			if (current->visited)
+			{
+				throw std::exception("Already visited the best node.");
+			}
 
-			sort(its.begin(), its.end());
+			vector<TIteration> newitems = current->expand();
+			
+			if (is_cyclic())
+			{
+				TIteration vis = current->with_visited();
+				its.erase(current);
+				its.insert(vis);
+			}
+			else
+			{
+				its.erase(current);
+			}
+
+			its.insert(newitems.begin(), newitems.end());
+
+			current = its.begin();
+			if (current == its.end())
+			{
+				throw exception("Sanity check failed.");
+			}
+			while (current->visited)
+			{
+				current++;
+				if (current == its.end())
+				{
+					throw exception("No unvisited nodes left.");
+				}
+			}
+
 		}
-		return *its.begin();
+		return *current;
 	}
 
 	bool is_cyclic()

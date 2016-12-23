@@ -26,29 +26,24 @@ public:
 		set<TIteration>::const_iterator current = its.begin();
 		while (current->continue_processing())
 		{
-			if (current->print())
-			{
-				cout << "size = " << its.size() << endl;
-				cout << *current << endl;
-			}
-
 			if (current->visited)
 			{
 				throw std::exception("Already visited the best node.");
 			}
 
 			vector<TIteration> newitems = current->expand();
-			/*
-			cout << "ORIGINAL: " << endl << *current << endl;
-			cout << "EXPAND: " << endl;
-			for (vector<iteration>::const_iterator it = newitems.begin(); it != newitems.end(); it++)
+			while (newitems.size() == 0)
 			{
-				cout << endl << *it << endl << endl;
+				current++;
+				if (current == its.end()) throw exception("No more expansions.");
+				if (!current->visited) newitems = current->expand();
 			}
-			throw exception("stop.");
-			*/
 
-			
+			if (current->print())
+			{
+				cout << *current;
+			}
+
 			if (is_cyclic())
 			{
 				TIteration vis = current->with_visited();

@@ -76,7 +76,11 @@ public:
 	bool compare(const iteration<part1>& lhs, const iteration<part1>& rhs) const
 	{
 		if (lhs.is_target != rhs.is_target) return lhs.is_target > rhs.is_target;
-		return lhs.path.size() < rhs.path.size();
+		long lhssize = lhs.path.size();
+		long rhssize = rhs.path.size();
+		if (lhssize != rhssize) return lhssize < rhssize;
+		bool pathdiff = lhs.path < rhs.path;
+		return pathdiff;
 	}
 	void print_result(const iteration<part1>& it)
 	{
@@ -90,7 +94,11 @@ public:
 	bool compare(const iteration<part2>& lhs, const iteration<part2>& rhs) const
 	{
 		if (lhs.is_target != rhs.is_target) return lhs.is_target < rhs.is_target;
-		return lhs.path.size() > rhs.path.size();
+		long lhssize = lhs.path.size();
+		long rhssize = rhs.path.size();
+		if(lhssize != rhssize) return lhssize > rhssize;
+		bool pathdiff = lhs.path < rhs.path;
+		return pathdiff;
 	}
 	void print_result(const iteration<part2>& it)
 	{
@@ -98,6 +106,7 @@ public:
 	}
 
 };
+
 
 template <> bool puzzle_iterator<iteration<part1>>::is_cyclic()
 {

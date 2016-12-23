@@ -69,29 +69,12 @@ namespace Day17
             var iterations = new List<Iteration> {new Iteration(new Pos(0,0), "", this)};
             while (iterations.Any()) //!(targets = iterations.Where(i => i.Pos.X == 3 && i.Pos.Y == 3).ToArray()).Any())
             {
-/*
-                var positions = iterations.Select(i => i.Pos).Distinct().ToArray();
-*/
                 iterations.Sort((i1, i2) =>
                 {
                     {
                         var c = i1.Visited.CompareTo(i2.Visited);
                         if (c != 0) return c;
                     }
-/*
-                    {
-                        var c = i1.ClosenessTo(3, 3).CompareTo(i2.ClosenessTo(3, 3));
-                        if (c != 0) return c;
-                    }
-                    {
-                        var c = (-i1.GetNewPositions(positions)).CompareTo(-i2.GetNewPositions(positions));
-                        if (c != 0) return c;
-                    }
-                    {
-                        var c = (-i1.AvailableDirections.Length).CompareTo(-i2.AvailableDirections.Length);
-                        if (c != 0) return c;
-                    }
-*/
                     return (-i1.Path.Length).CompareTo(-i2.Path.Length);
                 });
 

@@ -75,7 +75,11 @@ namespace Day17
                         var c = i1.Visited.CompareTo(i2.Visited);
                         if (c != 0) return c;
                     }
-                    return (-i1.Path.Length).CompareTo(-i2.Path.Length);
+                    {
+                        var c = (-i1.Path.Length).CompareTo(-i2.Path.Length);
+                        if (c != 0) return c;
+                    }
+                    return string.Compare(i1.Path, i2.Path, StringComparison.Ordinal);
                 });
 
                 if(iterations.GroupBy(i => i.Path).Any(g => g.Count() > 1)) throw new InvalidOperationException("Duplicate paths");
@@ -83,6 +87,8 @@ namespace Day17
 
                 if(iteration.Visited) throw new InvalidOperationException("Repetition");
                 Iteration[] newImprovements = iteration.Expand();
+                var desc = string.Join("  ", iterations.Take(10).Select(i => i.Path));
+                LogManager.GetCurrentClassLogger().Info($"{iteration.Path.Length}, size = {iterations.Count}, {desc}");
 
                 iterations.Remove(iteration);
 
@@ -91,7 +97,7 @@ namespace Day17
                     if (newIteration.IsTarget())
                     {
                         Targets.Add(newIteration);
-                        LogManager.GetCurrentClassLogger().Info($"Found: {newIteration.Path.Length}, best: {Targets.Max(t => t.Path.Length)}, iterations: {iterations.Count}");
+                        
                     }
                     else
                     {

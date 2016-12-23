@@ -17,7 +17,10 @@ public:
 	bool is_target;
 	TPart part;
 	bool visited;
-	iteration(const char* _passcode, const string& _path, int _x, int _y) : passcode(_passcode), path(_path), x(_x), y(_y), is_target(x == 3 && y == 3), visited(false) {}
+	iteration(const char* _passcode, const string& _path, int _x, int _y) : passcode(_passcode), path(_path), x(_x), y(_y), is_target(x == 3 && y == 3), visited(false)
+	{
+		if (_x < 0 || _x > 3 || _y < 0 || y > 3) throw exception("Invalid position");
+	}
 	
 	static bool is_open(char c)
 	{
@@ -106,6 +109,8 @@ public:
 	}
 
 };
+int part2pruned = 0;
+int part2best = 0;
 
 
 template <> bool puzzle_iterator<iteration<part1>>::is_cyclic()
@@ -116,6 +121,11 @@ template <> bool puzzle_iterator<iteration<part2>>::is_cyclic()
 {
 	return false;
 }
+template <> bool puzzle_iterator<iteration<part2>>::prune(const iteration<part2>& i)
+{
+	if (i.is_target) part2pruned++;
+	return i.is_target;
+}
 
 ostream& operator<<(ostream& os, const iteration<part1>& i)
 {
@@ -124,6 +134,9 @@ ostream& operator<<(ostream& os, const iteration<part1>& i)
 }
 ostream& operator<<(ostream& os, const iteration<part2>& i)
 {
+	int pathsize = i.path.size();
+	if (pathsize > part2best) part2best = pathsize;
+
 	cout << "\r" << i.path.size();
 	return os;
 }
@@ -131,12 +144,14 @@ ostream& operator<<(ostream& os, const iteration<part2>& i)
 int main()
 {
 	const char* passcode = "pgflpeqp";
+	/*
 	{
 		iteration<part1> start(passcode, "", 0, 0);
 		puzzle_iterator<iteration<part1>> puzzle(start);
 		iteration<part1> best = puzzle.get_best();
 		best.print_result();
 	}
+	*/
 	{
 		iteration<part2> start(passcode, "", 0, 0);
 		puzzle_iterator<iteration<part2>> puzzle(start);

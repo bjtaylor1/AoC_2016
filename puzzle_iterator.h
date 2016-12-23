@@ -47,9 +47,7 @@ public:
 
 			if (current->print())
 			{
-				cout << *current << ", size = " << its.size() << "  ";
-				int i = 0;
-				cout << endl;
+				cout << *current;
 			}
 
 			//remember the current node if it's cyclic

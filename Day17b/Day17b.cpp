@@ -145,14 +145,12 @@ ostream& operator<<(ostream& os, const iteration<part2>& i)
 int main()
 {
 	const char* passcode = "pgflpeqp";
-	/*
 	{
 		iteration<part1> start(passcode, "", 0, 0);
 		puzzle_iterator<iteration<part1>> puzzle(start);
 		iteration<part1> best = puzzle.get_best();
 		best.print_result();
 	}
-	*/
 	{
 		iteration<part2> start(passcode, "", 0, 0);
 		puzzle_iterator<iteration<part2>> puzzle(start);

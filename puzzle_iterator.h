@@ -31,12 +31,23 @@ public:
 				cout << "size = " << its.size() << endl;
 				cout << *current << endl;
 			}
+
 			if (current->visited)
 			{
 				throw std::exception("Already visited the best node.");
 			}
 
 			vector<TIteration> newitems = current->expand();
+			/*
+			cout << "ORIGINAL: " << endl << *current << endl;
+			cout << "EXPAND: " << endl;
+			for (vector<iteration>::const_iterator it = newitems.begin(); it != newitems.end(); it++)
+			{
+				cout << endl << *it << endl << endl;
+			}
+			throw exception("stop.");
+			*/
+
 			
 			if (is_cyclic())
 			{

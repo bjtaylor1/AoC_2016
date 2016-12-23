@@ -21,7 +21,7 @@ bool puzzle_input::add_node(map<long,node>& nodes, const regex& r, const string&
 	return false;
 }
 
-#define EXAMPLE
+//#define EXAMPLE
 #ifdef EXAMPLE
 int node::MAXX = 2;
 int node::MAXY = 2;

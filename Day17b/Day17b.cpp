@@ -17,6 +17,7 @@ public:
 	bool is_target;
 	TPart part;
 	bool visited;
+	iteration() {}
 	iteration(const char* _passcode, const string& _path, int _x, int _y) : passcode(_passcode), path(_path), x(_x), y(_y), is_target(x == 3 && y == 3), visited(false)
 	{
 		if (_x < 0 || _x > 3 || _y < 0 || y > 3) throw exception("Invalid position");
@@ -121,10 +122,10 @@ template <> bool puzzle_iterator<iteration<part2>>::is_cyclic()
 {
 	return false;
 }
-template <> bool puzzle_iterator<iteration<part2>>::prune(const iteration<part2>& i)
+
+template <> bool puzzle_iterator<iteration<part2>>::is_exhaustive()
 {
-	if (i.is_target) part2pruned++;
-	return i.is_target;
+	return true;
 }
 
 ostream& operator<<(ostream& os, const iteration<part1>& i)

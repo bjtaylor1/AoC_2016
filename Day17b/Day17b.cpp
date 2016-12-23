@@ -7,8 +7,12 @@
 using namespace std;
 #include "..\puzzle_iterator.h"
 
+class iteration17base
+{
+
+};
 template<class TPart>
-class iteration
+class iteration : public iteration17base
 {
 public:
 	const char* passcode;
@@ -114,14 +118,15 @@ int part2pruned = 0;
 int part2best = 0;
 
 
-template <> bool puzzle_iterator<iteration<part1>>::is_cyclic()
+template <> bool puzzle_iterator<iteration<part1>>::is_cyclic() const
 {
 	return false;
 }
-template <> bool puzzle_iterator<iteration<part2>>::is_cyclic()
+template <> bool puzzle_iterator<iteration<part2>>::is_cyclic() const
 {
 	return false;
 }
+
 
 template <> bool puzzle_iterator<iteration<part2>>::is_exhaustive()
 {

@@ -102,7 +102,7 @@ public:
 		return *current;
 	}
 
-	bool is_cyclic()
+	bool is_cyclic() const
 	{
 		return true;
 	}

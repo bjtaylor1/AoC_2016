@@ -14,4 +14,4 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
-#include "..\puzzle_iterator.h"
+#include <set>

@@ -5,6 +5,7 @@
 #include "..\md5helper.h"
 
 using namespace std;
+#include "..\puzzle_iterator.h"
 
 template<class TPart>
 class iteration
@@ -15,7 +16,8 @@ public:
 	int x,y;
 	bool is_target;
 	TPart part;
-	iteration(const char* _passcode, const string& _path, int _x, int _y) : passcode(_passcode), path(_path), x(_x), y(_y), is_target(x == 3 && y == 3) {}
+	bool visited;
+	iteration(const char* _passcode, const string& _path, int _x, int _y) : passcode(_passcode), path(_path), x(_x), y(_y), is_target(x == 3 && y == 3), visited(false) {}
 	
 	static bool is_open(char c)
 	{
@@ -26,7 +28,7 @@ public:
 			c == 'f';
 	}
 
-	vector<iteration> expand()
+	vector<iteration> expand() const
 	{
 		vector<iteration> e;
 		string hash = getmd5hash(passcode + path);
@@ -37,9 +39,11 @@ public:
 		return e;
 	}
 
-	bool operator<(const iteration<TPart>& rhs)
+	iteration with_visited() const
 	{
-		return part.compare(*this, rhs);
+		iteration vis(*this);
+		vis.visited = true;
+		return vis;
 	}
 
 	void print_result()
@@ -47,16 +51,29 @@ public:
 		part.print_result(*this);
 	}
 
-	bool continue_processing()
+	bool continue_processing() const
 	{
 		return !is_target;
 	}
+
+	bool print() const
+	{
+		return true;
+	}
+
 };
+
+template<class TPart>
+bool operator<(const iteration<TPart>& lhs, const iteration<TPart>& rhs)
+{
+	return lhs.part.compare(lhs, rhs);
+}
+
 
 class part1
 {
 public:
-	bool compare(const iteration<part1>& lhs, const iteration<part1>& rhs)
+	bool compare(const iteration<part1>& lhs, const iteration<part1>& rhs) const
 	{
 		if (lhs.is_target != rhs.is_target) return lhs.is_target > rhs.is_target;
 		return lhs.path.size() < rhs.path.size();
@@ -70,7 +87,7 @@ public:
 class part2
 {
 public:
-	bool compare(const iteration<part2>& lhs, const iteration<part2>& rhs)
+	bool compare(const iteration<part2>& lhs, const iteration<part2>& rhs) const
 	{
 		if (lhs.is_target != rhs.is_target) return lhs.is_target < rhs.is_target;
 		return lhs.path.size() > rhs.path.size();

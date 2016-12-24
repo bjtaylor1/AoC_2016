@@ -1,17 +1,26 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using NUnit.Framework;
 
 namespace Day24
 {
-    [TestClass]
+    [TestFixture]
     public class UnitTest1
     {
-        [TestMethod]
-        public void TestMethod1()
+        [TestCase(0,1, 2)]
+        [TestCase(0,2, 8)]
+        [TestCase(0,4, 2)]
+        [TestCase(3,4, 8)]
+        [TestCase(2,1, 6)]
+        public void Examples(int from, int to, int steps)
         {
+            var lines = File.ReadAllLines($"{TestContext.CurrentContext.TestDirectory}\\testinput.txt");
+            var routeFinder = new RouteFinder(lines);
+            var minDist = routeFinder.GetDistance(routeFinder.Targets[from], routeFinder.Targets[to]);
+            Assert.AreEqual(steps, minDist);
         }
     }
 
@@ -29,15 +38,19 @@ namespace Day24
             Movement current;
             while ((current = positions.First()).Pos != end)
             {
+                if(current.Visited) throw new InvalidOperationException("Best already visited. Check sort.");
+
                 var newPositions = GetNewPositions(current.Pos)
                     .Where(p => !positions.Any(m => m.Pos == p)) //discard already visited
                     .Select(p => new Movement(p, current.Steps + 1))
                     .ToArray();
+                current.Visited = true;
                 positions.AddRange(newPositions);
                 positions.Sort((m1, m2) =>
                 {
                     var comparisons = new Func<Movement, Movement, int>[]
                     {
+                        (mm1, mm2) => mm1.Visited.CompareTo(mm2.Visited),
                         (mm1, mm2) => mm1.Steps.CompareTo(mm2.Steps),
                         (mm1, mm2) => mm1.Pos.DistanceFrom(end).CompareTo(mm2.Pos.DistanceFrom(end))
                     };
@@ -69,6 +82,11 @@ namespace Day24
 
         public RouteFinder(string[] lines)
         {
+            if (lines.Select(s => s.Length).Distinct().Count() != 1)
+            {
+                throw new ArgumentException($"Lines not all same length!");
+            }
+
             Open = new bool[lines.Length][];
             for (int y = 0; y< lines.Length; y++)
             {
@@ -85,7 +103,7 @@ namespace Day24
                     }
                     else if (c == '#')
                     {
-                        Open[y][x] = true;
+                        Open[y][x] = false;
                     }
                     else if (c == '.')
                     {
@@ -107,6 +125,12 @@ namespace Day24
 
         public Pos Pos { get; }
         public int Steps { get; }
+        public bool Visited { get; set; }
+
+        public override string ToString()
+        {
+            return $"Pos: {Pos}, Steps: {Steps}";
+        }
     }
 
     public class Pos : IEquatable<Pos>
@@ -119,7 +143,7 @@ namespace Day24
 
         public override string ToString()
         {
-            return $"X: {X}, Y: {Y}";
+            return $"Y: {Y}, X: {X}";
         }
 
         public int X { get; }

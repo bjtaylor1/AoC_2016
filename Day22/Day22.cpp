@@ -52,10 +52,11 @@ public:
 	bool visited;
 	int id;
 	long long hash;
-	long long crowding;
-	long spacetogoaldist;
+	bool is_target;
+	long spacex, spacey, spacetogoaldist, goaldist;
+	iteration() {}
 	iteration(const map<long, node>& _nodes, long _depth, long _goalX, long _goalY) :
-		nodes(_nodes), depth(_depth), goalX(_goalX), goalY(_goalY), visited(false), id(nextid++)
+		nodes(_nodes), depth(_depth), goalX(_goalX), goalY(_goalY), visited(false), id(nextid++), is_target(goalX == 0&& _goalY == 0), goaldist(_goalX + goalY)
 	{
 		bool goalCanMoveLeft = _goalX > 0 && _nodes.at(pos::xy(_goalX - 1, _goalY)).avail >= _nodes.at(pos::xy(_goalX, _goalY)).used;
 		bool goalCanMoveUp = _goalY > 0 && _nodes.at(pos::xy(_goalX, _goalY - 1)).avail >= _nodes.at(pos::xy(_goalX, _goalY)).used;
@@ -68,19 +69,22 @@ public:
 		if (goalCanMoveDown) score += 1;
 
 
-		hash = 0; crowding = 0; spacetogoaldist = 0x7fffffff;
+		hash = 0; spacetogoaldist = 0x7fffffff;
 		for (int x = 0; x <= node::MAXX; x++)
 			for (int y = 0; y <= node::MAXY; y++)
 			{
 				long prime = primes[x + ((node::MAXX + 1)*y)];
 				long used = nodes.at(pos::xy(x, y)).used;
-				int goaldist = (abs(x - goalX) + abs(y - goalY));
-				if (used == 0) spacetogoaldist = goaldist;
+
+				if (used == 0)
+				{
+					long spacetogoalx = abs(x - goalX);
+					long spacetogoaly = abs(y - goalY);
+					spacex = x;
+					spacey = y;
+					spacetogoaldist = abs(x - goalX) + abs(y - goalY);
+				}
 				hash += prime * used;
-
-				long nearness = node::MAXX + node::MAXY + 2 - goaldist;
-				crowding += used * nearness;
-
 			}
 
 	}
@@ -162,22 +166,34 @@ public:
 
 	bool print() const
 	{
-		return node::MAXX <= 2 || (++thecount % 1000) == 0;
+		return node::MAXX <= 2 || ((++thecount) % 20) == 0;
 	}
 };
 ostream& operator<<(ostream& os, const iteration& i);
 
+bool compare(const iteration& lhs, const iteration& rhs)
+{
+	if (lhs.goaldist != rhs.goaldist) return lhs.goaldist < rhs.goaldist;
+	if (lhs.spacetogoaldist != rhs.spacetogoaldist) return lhs.spacetogoaldist < rhs.spacetogoaldist;
+	if (lhs.spacex != rhs.spacex) return  lhs.spacex < rhs.spacex;
+	if (lhs.spacey != rhs.spacey) return lhs.spacey < rhs.spacey;
+	if (lhs.goalX != rhs.goalX) return lhs.goalX < rhs.goalY;
+	if (lhs.goalY != rhs.goalY) return lhs.goalY < rhs.goalY;
+	
+	return false;
+
+}
 bool operator<(const iteration& lhs, const iteration& rhs)
 {
-	long lhsGoalDist = lhs.goalX + lhs.goalY;
-	long rhsGoalDist = rhs.goalX + rhs.goalY;
-	if (lhsGoalDist != rhsGoalDist) return lhsGoalDist < rhsGoalDist;
-
-	if (lhs.spacetogoaldist != rhs.spacetogoaldist) return lhs.spacetogoaldist < rhs.spacetogoaldist;
-
-	if (lhs.crowding != rhs.crowding) return lhs.crowding < rhs.crowding;
-
-	return lhs.hash < rhs.hash;
+	/*
+	if (thecount > 1800)
+	{
+		cout << "COMPARING: lhs = " << endl << lhs << endl << endl << "rhs = " << endl << rhs << endl << endl;
+	}
+	*/
+	bool res = compare(lhs, rhs);
+	//if(thecount > 1800) cout << "result = " << res << endl;
+	return res;
 }
 
 #define PRINT
@@ -187,7 +203,7 @@ ostream& operator<<(ostream& os, const iteration& i)
 {
 #ifdef PRINT
 
-	if (true || node::MAXX <= 2)
+	//if (true || node::MAXX <= 2)
 	{
 		for (long y = 0; y <= node::MAXY; y++)
 		{
@@ -195,16 +211,13 @@ ostream& operator<<(ostream& os, const iteration& i)
 			{
 
 				node n = i.nodes.at(pos::xy(x, y));
-				node startnode = startiteration->nodes.at(pos::xy(x, y));
 				if (x == i.goalX && y == i.goalY)
 					cout << "G";
 				else if (n.used == 0)
-					cout << "*";
-				else if (n.used == startnode.used)
-					cout << "0";
-				else if (n.used > startnode.used)
-					cout << "+";
-				else if (n.used < startnode.used)
+					cout << " ";
+				else if (n.used > 100)
+					cout << "#";
+				else 
 					cout << "-";
 				/*
 				int charindex = (n.used % 26);
@@ -218,11 +231,6 @@ ostream& operator<<(ostream& os, const iteration& i)
 			os << endl;
 		}
 		os << endl;
-		os << "Crowding: " << i.crowding << endl;
-	}
-	else
-	{
-		os << "Goal: " << i.goalX << "," << i.goalY << " score = " << i.score << ", visited = " << i.visited << ", hash = " << i.hash << ", id = " << i.id;
 	}
 #endif
 	return os;
@@ -260,13 +268,6 @@ bool operator<(const test& lhs, const test& rhs)
 
 int main()
 {
-
-	set<test> theset;
-	theset.insert(test(123, 9));
-	theset.insert(test(715, 9));
-	bool b = theset.begin()->get_a_bool();
-
-
 	initialize_movements();
 
 	map<long, node> nodes;
@@ -301,7 +302,6 @@ int main()
 
 	start.print_swappability();
 
-	/*
 	puzzle_iterator<iteration> iterator(start);
 
 	try
@@ -315,7 +315,7 @@ int main()
 	{
 		cout << ex.what() << endl;
 	}
-	*/
+	cout << thecount << endl;
 
 	return 0;
 }

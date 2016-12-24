@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using NLog;
 using NUnit.Framework;
+using Assert = NUnit.Framework.Assert;
+using TestContext = NUnit.Framework.TestContext;
 
 namespace Day24
 {
     [TestFixture]
     public class UnitTest1
     {
+        private static Stopwatch stopwatch;
+
         [TestCase(0,1, 2)]
         [TestCase(0,2, 8)]
         [TestCase(0,4, 2)]
@@ -22,6 +28,124 @@ namespace Day24
             var minDist = routeFinder.GetDistance(routeFinder.Targets[from], routeFinder.Targets[to]);
             Assert.AreEqual(steps, minDist);
         }
+
+        [Test]
+        public void OutputCombinations()
+        {
+            var combinations = new List<Tuple<int, int>>();
+            var distances = new Dictionary<Tuple<int,int>, int>();
+            var lines = File.ReadAllLines($"{TestContext.CurrentContext.TestDirectory}\\input.txt");
+            var routeFinder = new RouteFinder(lines);
+
+            LogManager.GetCurrentClassLogger().Info("==============Start");
+            for (int y = 0; y < 8; y++)
+            {
+                for (int x = y + 1; x < 8; x++)
+                {
+                    var pair = new Tuple<int, int>(y, x);
+                    var dist = routeFinder.GetDistance(routeFinder.Targets[pair.Item1], routeFinder.Targets[pair.Item2]);
+                    LogManager.GetCurrentClassLogger().Info($"{y} -> {x} = {dist}");
+                    distances.Add(Tuple.Create(y, x), dist);
+                    distances.Add(Tuple.Create(x, y), dist); //symmetrical?!
+                }
+            }
+
+            int bestTourDist = int.MaxValue;
+            int[] bestTour = null;
+            GetAllPossibleTours(ints =>
+            {
+                if (ints[0] == 0)
+                {
+                    int tourDist = 0;
+                    for (int i = 1; i < 8; i++)
+                    {
+                        tourDist += distances[Tuple.Create(ints[i - 1], ints[i])];
+                    }
+                    tourDist += distances[Tuple.Create(ints.Last(), 0)];
+                    if (tourDist < bestTourDist)
+                    {
+                        bestTourDist = tourDist;
+                        bestTour = ints.ToArray();
+                    }
+                }
+            });
+            LogManager.GetCurrentClassLogger().Info($"Best tour = {string.Join("-", bestTour.Select(i => i.ToString()))}, distance = {bestTourDist}");
+
+            Console.Out.WriteLine(combinations.Count);
+
+        }
+
+        [Test]
+        public void CountCombinations()
+        {
+            int combinations = 0;
+            GetAllPossibleTours(ints =>
+            {
+                //if (ints[0] == 0)
+                {
+                    combinations++;
+                }
+            });
+
+            Console.Out.WriteLine(combinations);
+
+        }
+
+        private void GetAllPossibleTours(Action<int[]> process)
+        {
+            GeneratePossibleTours(new int[] { 0 }, process);
+        }
+
+        private void GeneratePossibleTours(int[] cumulative, Action<int[]> process)
+        {
+            bool b = cumulative.Take(6).SequenceEqual(new[] {0, 7,6,1,5,2});
+
+            if (cumulative.Length == 8)
+            {
+                process(cumulative);
+            }
+            else
+            {
+                for (int next = 0; next < 8; next++)
+                {
+                    if (!cumulative.Contains(next))
+                    {
+                        GeneratePossibleTours(cumulative.Concat(new [] {next}).ToArray(), process);
+                    }
+                }
+            }
+        }
+
+
+        [OneTimeSetUp]
+        public static void OneTimeSetUp()
+        {
+            stopwatch = new Stopwatch();
+        }
+
+        [TestCase(0,1)]
+        [TestCase(0,2)]
+        [TestCase(0,3)]
+        [TestCase(0,4)]
+        [TestCase(0,5)]
+        [TestCase(0,6)]
+        [TestCase(0,7)]
+        public void TestGetDist(int from, int to)
+        {
+            stopwatch.Start();
+            var lines = File.ReadAllLines($"{TestContext.CurrentContext.TestDirectory}\\input.txt");
+            var routeFinder = new RouteFinder(lines);
+            var minDist = routeFinder.GetDistance(routeFinder.Targets[from], routeFinder.Targets[to]);
+            Console.Out.WriteLine(minDist);
+            stopwatch.Stop();
+        }
+
+        [OneTimeTearDown]
+        public static void OneTimeTearDown()
+        {
+            Console.Out.WriteLine(stopwatch.Elapsed);
+        }
+
     }
 
 

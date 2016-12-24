@@ -185,14 +185,7 @@ bool compare(const iteration& lhs, const iteration& rhs)
 }
 bool operator<(const iteration& lhs, const iteration& rhs)
 {
-	/*
-	if (thecount > 1800)
-	{
-		cout << "COMPARING: lhs = " << endl << lhs << endl << endl << "rhs = " << endl << rhs << endl << endl;
-	}
-	*/
 	bool res = compare(lhs, rhs);
-	//if(thecount > 1800) cout << "result = " << res << endl;
 	return res;
 }
 

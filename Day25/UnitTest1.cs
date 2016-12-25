@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NLog;
 using NUnit.Framework;
 
@@ -10,6 +11,20 @@ namespace Day25
     [TestFixture]
     public class UnitTest1
     {
+        [Test]
+        public void SolveQuickly()
+        {
+            var answer = Convert.ToInt32(Enumerable.Range(1, 10).Select(i => string.Join("", Enumerable.Repeat("10", i)))
+                .First(s => Convert.ToInt32(s, 2) > 2550), 2) - 2550;
+        }
+
+        [Test]
+        public void SolveEvenQuicker()
+        {
+            var answer = Enumerable.Range(2550, Int16.MaxValue).First(s => Regex.IsMatch(Convert.ToString(s, 2), @"^(10)+$")) - 2550;
+            Console.Out.WriteLine(answer);
+        }
+
         [Test]
         public void ReverseEngineer()
         {

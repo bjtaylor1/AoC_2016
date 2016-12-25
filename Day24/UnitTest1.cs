@@ -75,22 +75,6 @@ namespace Day24
 
         }
 
-        [Test]
-        public void CountCombinations()
-        {
-            int combinations = 0;
-            GetAllPossibleTours(ints =>
-            {
-                //if (ints[0] == 0)
-                {
-                    combinations++;
-                }
-            });
-
-            Console.Out.WriteLine(combinations);
-
-        }
-
         private void GetAllPossibleTours(Action<int[]> process)
         {
             GeneratePossibleTours(new int[] { 0 }, process);
@@ -98,8 +82,6 @@ namespace Day24
 
         private void GeneratePossibleTours(int[] cumulative, Action<int[]> process)
         {
-            bool b = cumulative.Take(6).SequenceEqual(new[] {0, 7,6,1,5,2});
-
             if (cumulative.Length == 8)
             {
                 process(cumulative);
@@ -162,11 +144,14 @@ namespace Day24
             Movement current;
             while ((current = positions.First()).Pos != end)
             {
-                if(current.Visited) throw new InvalidOperationException("Best already visited. Check sort.");
+                if (current.Visited)
+                {
+                    throw new InvalidOperationException("Best already visited. Check sort.");
+                }
 
-                var newPositions = GetNewPositions(current.Pos)
+                var newPositions = GetNewPositions(current.Pos, end)
                     .Where(p => !positions.Any(m => m.Pos == p)) //discard already visited
-                    .Select(p => new Movement(p, current.Steps + 1))
+                    .Select(p => new Movement(p, current.Steps + current.Pos.StraightLineDistanceTo(p)))
                     .ToArray();
                 current.Visited = true;
                 positions.AddRange(newPositions);
@@ -186,20 +171,53 @@ namespace Day24
             return distance;
         }
 
-        public Pos[] GetNewPositions(Pos pos)
+        public Pos[] GetNewPositions(Pos pos, Pos target)
         {
             var newPos = new List<Pos>();
-            if(pos.Y > 0 && Open[pos.Y-1][pos.X]) //up
-                newPos.Add(new Pos(pos.Y-1, pos.X));
+            if (Open[pos.Y - 1][pos.X]) //up
+            {
+                int newY = pos.Y - 1;
+                while (Open[newY][pos.X] && !target.Equals(new Pos(newY, pos.X))
+                    && !(Open[newY][pos.X-1] || Open[newY][pos.X + 1]))
+                {
+                    newY--;
+                }
+                if(Open[newY][pos.X]) newPos.Add(new Pos(newY, pos.X));
+            }
 
-            if(pos.Y < Open.Length-1 && Open[pos.Y+1][pos.X]) //down
-                newPos.Add(new Pos(pos.Y+1, pos.X));
+            if (Open[pos.Y + 1][pos.X]) //down
+            {
+                int newY = pos.Y + 1;
+                while (Open[newY][pos.X] && !target.Equals(new Pos(newY, pos.X))
+                    && !(Open[newY][pos.X - 1] || Open[newY][pos.X + 1]))
+                {
+                    newY++;
+                }
+                if (Open[newY][pos.X]) newPos.Add(new Pos(newY, pos.X));
+            }
 
-            if(pos.X > 0 && Open[pos.Y][pos.X-1]) //left
-                newPos.Add(new Pos(pos.Y, pos.X-1));
+            if (Open[pos.Y][pos.X - 1]) //left
+            {
+                int newX = pos.X - 1;
+                while (Open[pos.Y][newX] && !target.Equals(new Pos(pos.Y, newX))
+                    && !(Open[pos.Y - 1][newX] || Open[pos.Y + 1][newX]))
+                {
+                    newX--;
+                }
+                if (Open[pos.Y][newX]) newPos.Add(new Pos(pos.Y, newX));
+            }
 
-            if(pos.X < Open[pos.Y].Length -1 && Open[pos.Y][pos.X + 1]) //right
-                newPos.Add(new Pos(pos.Y, pos.X + 1));
+            if (Open[pos.Y][pos.X + 1]) //right
+            {
+                int newX = pos.X + 1;
+                while (Open[pos.Y][newX] && !target.Equals(new Pos(pos.Y, newX))
+                    && !(Open[pos.Y - 1][newX] || Open[pos.Y + 1][newX]))
+                {
+                    newX++;
+                }
+                if (Open[pos.Y][newX]) newPos.Add(new Pos(pos.Y, newX));
+
+            }
 
             return newPos.ToArray();
         }
@@ -309,6 +327,22 @@ namespace Day24
         public int DistanceFrom(Pos other)
         {
             return Math.Abs(other.X - X) + Math.Abs(other.Y - Y);
+        }
+
+        public int StraightLineDistanceTo(Pos other)
+        {
+            int dist;
+            if (other.X == X)
+            {
+                dist = Math.Abs(other.Y - Y);
+            }
+            else if (other.Y == Y)
+            {
+                dist = Math.Abs(other.X - X);
+            }
+            else throw new InvalidOperationException("Not in the same line!");
+            if(dist == 0) throw new InvalidOperationException("Same point");
+            return dist;
         }
     }
 
